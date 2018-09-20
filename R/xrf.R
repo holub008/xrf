@@ -193,7 +193,8 @@ dedupe_train_rules <- function(evaluated_rules, max_absolute_correlation) {
     }
   }
   
-  return(colnames(evaluated_rules)[-duplicate_rule_ixs])
+  selection_ixs <- if(length(duplicate_rule_ixs) > 0) -duplicate_rule_ixs else 1:ncol(evaluated_rules)
+  return(colnames(evaluated_rules)[, selection_ixs])
 }
 
 #' Fit a RuleFit model
@@ -360,11 +361,15 @@ coef.xrf <- function(object, lambda = 'lambda.min') {
   rule_conjunctions <- synthesize_conjunctions(object$rules)
   glm_coefficients <- coef(object$glm, s = lambda)
   glm_df <- as.data.frame(as.matrix(glm_coefficients))
-  colnames(glm_df) <- sapply(lambda, function(lambda_value) { paste0('coefficients_', lambda) })
+  colnames(glm_df) <- sapply(lambda, function(lambda_value) { paste0('coefficient_', lambda) })
   glm_df$term <- rownames(glm_df)
   rownames(glm_df) <- NULL
   glm_df %>%
     left_join(rule_conjunctions, by = c('term' = 'rule_id')) %>%
-    arrange_at(colnames(glm_df[1]))
+    arrange_at(colnames(glm_df[1])) %>%
+    mutate(
+      rule = conjunction
+    ) %>%
+    select(-conjunction)
   
 }
