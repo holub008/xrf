@@ -86,9 +86,10 @@ With results:
 | pre   | 211      |
 
 On the test set:
+
 | Model    |  AUC     |
 | -------- | -------- |
-| xrf      | .922     |      
+| xrf      | .923     |      
 | pre      | .906     |
 | xgboost  | .924     | 
 | glmnet   | .888     |
