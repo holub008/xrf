@@ -226,6 +226,7 @@ xrf <- function(object, ...) {
 #' @author kholub
 #' 
 #' @importFrom xgboost xgboost
+#' @importFrom xgboost xgb.model.dt.tree
 #' @import dplyr
 #' @importFrom Matrix sparse.model.matrix
 #' 

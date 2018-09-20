@@ -29,7 +29,7 @@ As noted in the last point, xrf does provide less flexibility (e.g. cannot deriv
 
 ## Example
 
-Here we predict income from census data.
+Here we predict whether an individual's income is greater than $50,000 using census data.
 ```R
 library(RCurl)
 library(xrf)
@@ -41,12 +41,12 @@ colnames(census_income) <- c('age', 'workclass', 'fnlwgt', 'education', 'educati
                             'occupation', 'relationship', 'race', 'sex', 'capital_gain', 'capital_loss',
                             'hours_per_week', 'native_country', 'above_50k')
                             
-(m_xrf <- xrf(above_50k ~ ., census_train, family = 'binomial', 
+m_xrf <- xrf(above_50k ~ ., census_income, family = 'binomial', 
              xgb_control = list(nrounds = 100, max_depth = 3))
 ```
 
 ### Comparison
-Here we attempt to predict a binary response (whether a person makes over $50,000 per year) from the same data. We employ out-of-the-box RuleFit from pre & xrf, as well as raw xgboost & glmnet models.
+Here we employ out-of-the-box RuleFit from pre & xrf, as well as raw xgboost & glmnet models.
 
 ```R
 library(dplyr)
