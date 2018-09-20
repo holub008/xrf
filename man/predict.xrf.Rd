@@ -4,8 +4,8 @@
 \alias{predict.xrf}
 \title{Draw predictions from a RuleFit model}
 \usage{
-\method{predict}{xrf}(object, newdata, sparse = "TRUE",
-  lambda = "lambda.min", type = "response")
+\method{predict}{xrf}(object, newdata, sparse = TRUE, lambda = "lambda.min",
+  type = "response")
 }
 \arguments{
 \item{object}{an object of class xrf}

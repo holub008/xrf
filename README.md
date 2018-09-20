@@ -26,15 +26,31 @@ The general algorithm follows:
 * Providing a more limited interface to produce fewer bugs
 
 As noted in the last point, xrf does provide less flexibility (e.g. cannot derive rules from RandomForest, or fitting trees using different algorithms) & fewer interpretive tools (this is in progress) than pre.
-## Examples
-Here we attempt to predict a binary response (whether a person makes over $50,000 per year) from census data. We employ out-of-the-box models from pre & xrf, as well as raw xgboost & glmnet models.
 
+## Example
+
+Here we predict income from census data.
 ```R
 library(RCurl)
-library(dplyr)
-
-library(pre)
 library(xrf)
+
+# grabbing data from uci
+census_income_text <- getURL('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data')
+census_income <- read.csv(textConnection(census_income_text), header=F, stringsAsFactors = F)
+colnames(census_income) <- c('age', 'workclass', 'fnlwgt', 'education', 'education_num', 'marital_status',
+                            'occupation', 'relationship', 'race', 'sex', 'capital_gain', 'capital_loss',
+                            'hours_per_week', 'native_country', 'above_50k')
+                            
+(m_xrf <- xrf(above_50k ~ ., census_train, family = 'binomial', 
+             xgb_control = list(nrounds = 100, max_depth = 3))
+```
+
+### Comparison
+Here we attempt to predict a binary response (whether a person makes over $50,000 per year) from the same data. We employ out-of-the-box RuleFit from pre & xrf, as well as raw xgboost & glmnet models.
+
+```R
+library(dplyr)
+library(pre)
 library(glmnet)
 library(xgboost)
 
@@ -45,11 +61,6 @@ auc <- function (prediction, actual) {
   unname(1 - mann_whit/(sum(actual) * as.double(sum(!actual))))
 }
 
-census_income_text <- getURL('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data')
-census_income <- read.csv(textConnection(census_income_text), header=F, stringsAsFactors = F)
-colnames(census_income) <- c('age', 'workclass', 'fnlwgt', 'education', 'education_num', 'marital_status',
-                            'occupation', 'relationship', 'race', 'sex', 'capital_gain', 'capital_loss',
-                            'hours_per_week', 'native_country', 'above_50k')
 census_income <- census_income %>%
   # pre is picky about data types 
   mutate_if(is.character, as.factor) %>%

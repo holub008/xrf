@@ -316,13 +316,15 @@ xrf.formula <- function(object, data, family,
 #'
 #' @export
 predict.xrf <- function(object, newdata,
-                        sparse = 'TRUE',
+                        sparse = TRUE,
                         lambda = 'lambda.min',
                         type = 'response') {
   # TODO: handle matrix
-  # TODO: handle missing factor levels
+  # TODO: handle missing factor levels more elegantly (both for rule evaluation & glmnet)
   # TODO handle missing predictors (continuous) by failing or imputing?
-  design_matrix_method <- if (TRUE) sparse.model.matrix else model.matrix
+  # TODO: when rules have a zero coefficient, we don't need to evaluate them
+  stopifnot(is.data.frame(newdata))
+  design_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
   
   raw_design_matrix <- design_matrix_method(object$base_formula, newdata)
   rules_features <- evaluate_rules(object$rules, raw_design_matrix)
