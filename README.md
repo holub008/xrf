@@ -6,7 +6,7 @@ devtools::install_git('https://github.com/holub008/xrf')
 ```
 
 ## About
-RuleFit (described in [Friedman & Popescu](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) is a clever model combining tree ensembles and linear models. The goal is to produce a model with comparable performance to a tree ensemble, with the interpretability of a linear model.
+RuleFit (described in [Friedman & Popescu](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf)) is a clever model combining tree ensembles and linear models. The goal is to produce a model with comparable performance to a tree ensemble, with the interpretability of a linear model.
 
 The general algorithm follows:
 
@@ -27,6 +27,7 @@ The general algorithm follows:
 
 As noted in the last point, xrf does provide less flexibility (e.g. cannot derive rules from RandomForest, or fitting trees using different algorithms) & fewer interpretive tools (this is in progress) than pre.
 ## Examples
+Here we attempt to predict a binary response (whether a person makes over $50,000 per year) from census data. We employ out-of-the-box models from pre & xrf, as well as raw xgboost & glmnet models.
 
 ```R
 library(RCurl)
@@ -56,7 +57,7 @@ census_income <- census_income %>%
     above_50k = as.character(above_50k) == ' >50K'
   )
 
-set.seed(55414)
+set.seed(55455)
 train_ix <- sample(nrow(census_income), floor(nrow(census_income) * .66))
 census_train <- census_income[train_ix, ]
 census_test <- census_income[-train_ix, ]
@@ -68,13 +69,27 @@ system.time(m_pre <- pre(above_50k ~ ., na.omit(census_train),
                          family = 'binomial', ntrees = 100, maxdepth = 3, tree.unbiased = TRUE))
 system.time(m_xrf <- xrf(above_50k ~ ., census_train, family = 'binomial', 
              xgb_control = list(nrounds = 100, max_depth = 3)))
-m_xgb <- xgboost(census_train_mat, census_train$above_50k, max_depth = 3, nrounds = 100)
+m_xgb <- xgboost(census_train_mat, census_train$above_50k, max_depth = 3, nrounds = 100, objective = 'binary:logistic')
 m_glm <- cv.glmnet(census_train_mat, census_train$above_50k, alpha = 1)
 
 auc(predict(m_pre, census_test), census_test$above_50k)
 auc(predict(m_xrf, census_test), census_test$above_50k)
 auc(predict(m_glm, newx = census_test_mat, s = 'lambda.min'), census_test$above_50k)
-auc(as.vector(predict(m_big_glm, as.big.matrix(census_test_mat))), census_test$above_50k)
 auc(predict(m_xgb, newdata = census_test_mat, s = 'lambda.min'), census_test$above_50k)
-
 ```
+
+With results:
+
+| Model | Time (s) |
+| ----- | -------- |
+| xrf   | 89       |    
+| pre   | 211      |
+
+On the test set:
+| Model    |  AUC     |
+| -------- | -------- |
+| xrf      | .922     |      
+| pre      | .906     |
+| xgboost  | .924     | 
+| glmnet   | .888     |
+
