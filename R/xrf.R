@@ -208,7 +208,6 @@ xrf <- function(object, ...) {
   UseMethod('xrf', object)
 }
 
-
 #' Fit a RuleFit model
 #' 
 #' See Friedman & Popescu (2008) for a description of the general RuleFit algorithm.
@@ -216,10 +215,17 @@ xrf <- function(object, ...) {
 #' traversals, and fits a sparse linear model to the resulting feature set
 #' (including the original feature set) using glmnet.
 #' 
+#' @param object a formula prescribing features to use in the model
+#' @param data a data frame with columns corresponding to the formula
+#' @param family the family of the fitted model. one of 'gaussian', 'binomial', 'multinomial'
+#' @param xgb_control a list of parameters for xgboost. must supply an nrounds argument
+#' @param glm_control a list of parameters for the glmnet fit. must supply a type.measure and nfolds arguments (for the lambda cv)
+#' @param max_rule_correlation the maxmimal allowed abslute Spearman correlation between any given pair of rules before on of the rules is removed
+#' @param sparse whether a sparse design matrix should be used
+#' 
 #' @author kholub
 #' 
-#' @import xgboost
-#' @import glmnet
+#' @importFrom xgboost xgboost
 #' @import dplyr
 #' @importFrom Matrix sparse.model.matrix
 #' 
@@ -299,6 +305,11 @@ xrf.formula <- function(object, data, family,
 
 #' Draw predictions from a RuleFit model
 #'
+#' @param object an object of class xrf
+#' @param sparse a logical indicating whether a sparse design matrix should be used
+#' @param lambda the lasso penalty parameter to be applied
+#' @param type the type of predicted value produced
+#'
 #' @author kholub
 #' 
 #' @importFrom Matrix sparse.model.matrix
@@ -335,6 +346,9 @@ synthesize_conjunctions <- function(rules) {
 }
 
 #' Produce rules & coefficients for the RuleFit model
+#'
+#' @param object an object of class xrf
+#' @param lambda the lasso penalty parameter to be applied
 #'
 #' @author kholub
 #'

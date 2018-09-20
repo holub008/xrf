@@ -6,6 +6,11 @@
 \usage{
 \method{coef}{xrf}(object, lambda = "lambda.min")
 }
+\arguments{
+\item{object}{an object of class xrf}
+
+\item{lambda}{the lasso penalty parameter to be applied}
+}
 \description{
 Produce rules & coefficients for the RuleFit model
 }

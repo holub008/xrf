@@ -8,6 +8,21 @@
   glm_control = list(type.measure = "deviance", nfolds = 5),
   max_rule_correlation = 0.99, sparse = TRUE)
 }
+\arguments{
+\item{object}{a formula prescribing features to use in the model}
+
+\item{data}{a data frame with columns corresponding to the formula}
+
+\item{family}{the family of the fitted model. one of 'gaussian', 'binomial', 'multinomial'}
+
+\item{xgb_control}{a list of parameters for xgboost. must supply an nrounds argument}
+
+\item{glm_control}{a list of parameters for the glmnet fit. must supply a type.measure and nfolds arguments (for the lambda cv)}
+
+\item{max_rule_correlation}{the maxmimal allowed abslute Spearman correlation between any given pair of rules before on of the rules is removed}
+
+\item{sparse}{whether a sparse design matrix should be used}
+}
 \description{
 See Friedman & Popescu (2008) for a description of the general RuleFit algorithm.
 This method uses XGBoost to fit a tree ensemble, extracts a ruleset as the conjunction of tree 
