@@ -194,7 +194,7 @@ dedupe_train_rules <- function(evaluated_rules, max_absolute_correlation) {
   }
   
   selection_ixs <- if(length(duplicate_rule_ixs) > 0) -duplicate_rule_ixs else 1:ncol(evaluated_rules)
-  return(colnames(evaluated_rules)[, selection_ixs])
+  return(colnames(evaluated_rules)[selection_ixs])
 }
 
 #' Fit a RuleFit model
@@ -357,7 +357,7 @@ synthesize_conjunctions <- function(rules) {
 #' @author kholub
 #'
 #' @export
-coef.xrf <- function(object, lambda = 'lambda.min') {
+coef.xrf <- function(object, lambda = 'lambda.min', ...) {
   rule_conjunctions <- synthesize_conjunctions(object$rules)
   glm_coefficients <- coef(object$glm, s = lambda)
   glm_df <- as.data.frame(as.matrix(glm_coefficients))
@@ -373,3 +373,15 @@ coef.xrf <- function(object, lambda = 'lambda.min') {
     select(-conjunction)
   
 }
+
+#' Summarize an eXtreme RuleFit model
+#' 
+#' @param object an object of class xrf
+#'
+#' @export
+summary.xrf <- function(object, ...) {
+  
+}
+
+
+  
