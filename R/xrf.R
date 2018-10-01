@@ -100,9 +100,9 @@ rule_traverse <- function(row, tree) {
   else {
     # the Yes/No obfuscates the simplicity of the algo - in order tree traversal
     left_child <- tree[tree$ID == row$Yes,]
-    stopifnot(nrow(left_child) == 1) # this
+    stopifnot(nrow(left_child) == 1) # this can be trusted from xgb, but fail if that changes
     right_child <- tree[tree$ID == row$No,]
-    stopifnot(nrow(left_child) == 1)
+    stopifnot(nrow(right_child) == 1)
     
     # recursion will bubble up the conjunctive rule to this split
     left_rules <- rule_traverse(left_child, tree)
