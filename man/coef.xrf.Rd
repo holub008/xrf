@@ -4,7 +4,7 @@
 \alias{coef.xrf}
 \title{Produce rules & coefficients for the RuleFit model}
 \usage{
-\method{coef}{xrf}(object, lambda = "lambda.min")
+\method{coef}{xrf}(object, lambda = "lambda.min", ...)
 }
 \arguments{
 \item{object}{an object of class xrf}

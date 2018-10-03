@@ -371,17 +371,24 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
       rule = conjunction
     ) %>%
     select(-conjunction)
-  
 }
 
 #' Summarize an eXtreme RuleFit model
 #' 
 #' @param object an object of class xrf
+#' 
+#' @author kholub
+#' 
+#' @import dplyr
 #'
 #' @export
 summary.xrf <- function(object, ...) {
-  
+  cat(paste0('An eXtreme RuleFit model of ', n_distinct(object$rules$rule_id), ' rules.'))
+  cat(paste0('\n\nFormula:\n\n'))
+  show(object$base_formula)
+  cat('\n\nTree model:\n\n')
+  show(summary(object$xgb))
+  cat('\n\nGLM:\n\n')
+  show(summary(object$glm))
 }
-
-
   
