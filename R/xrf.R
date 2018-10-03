@@ -29,7 +29,7 @@ condition_xgb_control <- function(family, xgb_control, data, response_var) {
 }
 
 xrf_preconditions <- function(family, xgb_control, glm_control,
-                              data, response_var) {
+                              data, response_var, prefit_xgb) {
   supported_families <- c('gaussian', 'binomial', 'multinomial')
   if (!(family %in% supported_families)) {
     stop(paste0('Family "', family, '" is not currently supported. Supported families are: ', paste0(supported_families, collapse = ', ')))
@@ -54,6 +54,11 @@ xrf_preconditions <- function(family, xgb_control, glm_control,
   
   if (length(intersect(c('type.measure', 'nfolds'), names(glm_control))) < 2) {
     stop('Must supply "type.measure" and "nfolds" as glm_control parameters')
+  }
+  
+  allowed_tree_ensemble_classes <- c('xgb.Booster')
+  if (!is.null(prefit_xgb) && length(intersect(allowed_tree_ensemble_classes, class(prefit_xgb))) == 0) {
+    stop('Prefit tree ensemble must be of class {', paste0(allowed_tree_ensemble_classes, collapse = ','), "}")
   }
 }
 
@@ -100,7 +105,7 @@ rule_traverse <- function(row, tree) {
   else {
     # the Yes/No obfuscates the simplicity of the algo - in order tree traversal
     left_child <- tree[tree$ID == row$Yes,]
-    stopifnot(nrow(left_child) == 1) # this can be trusted from xgb, but fail if that changes
+    stopifnot(nrow(left_child) == 1) # this can be trusted from xgboost, but fail if that changes
     right_child <- tree[tree$ID == row$No,]
     stopifnot(nrow(right_child) == 1)
     
@@ -223,6 +228,7 @@ xrf <- function(object, ...) {
 #' @param glm_control a list of parameters for the glmnet fit. must supply a type.measure and nfolds arguments (for the lambda cv)
 #' @param max_rule_correlation the maxmimal allowed abslute Spearman correlation between any given pair of rules before on of the rules is removed
 #' @param sparse whether a sparse design matrix should be used
+#' @param prefit_xgb an xgboost model (of class xgb.Booster) to be used instead of the model that xrf would normally fit
 #' 
 #' @author kholub
 #' 
@@ -236,15 +242,18 @@ xrf <- function(object, ...) {
 #' ensembles. \emph{The Annals of Applied Statistics, 2}(3), 916-954.
 #' 
 #' @examples 
-#' m <- xrf(Petal.Length ~ ., iris, family = 'gaussian')
+#' m <- xrf(Petal.Length ~ ., iris, 
+#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          family = 'gaussian')
 #'
 #' @export
 xrf.formula <- function(object, data, family,
-                        xgb_control = list(nrounds = 100),
+                        xgb_control = list(nrounds = 100, max_depth = 3),
                         glm_control = list(type.measure = 'deviance',
                                            nfolds = 5),
                         max_rule_correlation = .99,
-                        sparse = TRUE) {
+                        sparse = TRUE,
+                        prefit_xgb = NULL) {
   expanded_formula <- expand_formula(object, data)
   # todo this breaks for naughty formulas
   response_var <- get_response(expanded_formula)
@@ -252,18 +261,29 @@ xrf.formula <- function(object, data, family,
   xgboost_conditioned <- condition_xgb_control(family, xgb_control, data, response_var)
   xgb_control <- xgboost_conditioned$xgb_control
   data <- xgboost_conditioned$data
-  xrf_preconditions(family, xgb_control, glm_control, data, response_var)
+  xrf_preconditions(family, xgb_control, glm_control, data, response_var, prefit_xgb)
   
   model_matrix_method <- if (sparse) sparse.model.matrix else model.matrix 
   design_matrix <- model_matrix_method(expanded_formula, data)
   
-  m_xgb <- xgboost(data = design_matrix,
-                   label = data[[response_var]],
-                   nrounds = xgb_control$nrounds,
-                   objective = get_xgboost_objective(family),
-                   params = xgb_control)
-  
-  rules <- extract_xgb_rules(m_xgb)
+  if (is.null(prefit_xgb)) {
+    m_xgb <- xgboost(data = design_matrix,
+                     label = data[[response_var]],
+                     nrounds = xgb_control$nrounds,
+                     objective = get_xgboost_objective(family),
+                     params = xgb_control)
+    rules <- extract_xgb_rules(m_xgb)
+  }
+  else {
+    m_xgb <- prefit_xgb
+    rules <- extract_xgb_rules(m_xgb)
+    if (length(setdiff(rules$feature, colnames(design_matrix))) > 0) {
+      stop('prefit_xgb contains features (or factor-levels) not present in the input training data. This is currently not supported.')
+      # TODO one simple approach would be to simply remove these feature splits from the rules
+      # but that potentially dilutes the power of this method. for now, it's on the user to rectify this issue
+    }
+  }
+
   rule_features <- evaluate_rules(rules, design_matrix)
   
   varying_rules <- remove_no_variance_rules(rule_features)
@@ -286,7 +306,8 @@ xrf.formula <- function(object, data, family,
   # todo we already have a design matrix, so re-generating it with glmnot is a bit wasteful
   full_data <- cbind(data, rule_features, 
                      stringsAsFactors = FALSE)
-  # todo glmnet is a bottleneck, and alternatives like biglasso should be considered
+  
+  # todo glmnet is a bottleneck on data size - it may be interesting to fit the glm to much larger data, e.g. with spark or biglasso
   full_formula <- add_predictors(expanded_formula, colnames(rule_features))
   # glmnet automatically adds an intercept
   full_formula <- update(full_formula, . ~ . -1)

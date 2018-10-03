@@ -4,9 +4,9 @@
 \alias{xrf.formula}
 \title{Fit a RuleFit model}
 \usage{
-\method{xrf}{formula}(object, data, family, xgb_control = list(nrounds = 100),
-  glm_control = list(type.measure = "deviance", nfolds = 5),
-  max_rule_correlation = 0.99, sparse = TRUE)
+\method{xrf}{formula}(object, data, family, xgb_control = list(nrounds = 100,
+  max_depth = 3), glm_control = list(type.measure = "deviance", nfolds = 5),
+  max_rule_correlation = 0.99, sparse = TRUE, prefit_xgb = NULL)
 }
 \arguments{
 \item{object}{a formula prescribing features to use in the model}
@@ -22,6 +22,8 @@
 \item{max_rule_correlation}{the maxmimal allowed abslute Spearman correlation between any given pair of rules before on of the rules is removed}
 
 \item{sparse}{whether a sparse design matrix should be used}
+
+\item{prefit_xgb}{an xgboost model (of class xgb.Booster) to be used instead of the model that xrf would normally fit}
 }
 \description{
 See Friedman & Popescu (2008) for a description of the general RuleFit algorithm.
@@ -30,7 +32,9 @@ traversals, and fits a sparse linear model to the resulting feature set
 (including the original feature set) using glmnet.
 }
 \examples{
-m <- xrf(Petal.Length ~ ., iris, family = 'gaussian')
+m <- xrf(Petal.Length ~ ., iris, 
+         xgb_control = list(nrounds = 20, max_depth = 2),
+         family = 'gaussian')
 
 }
 \references{
