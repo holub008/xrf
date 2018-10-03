@@ -412,4 +412,27 @@ summary.xrf <- function(object, ...) {
   cat('\n\nGLM:\n\n')
   show(summary(object$glm))
 }
-  
+
+#' Print an eXtreme RuleFit model
+#'
+#' @param x an xrf object to be printed
+#' 
+#' @author kholub
+#'
+#' @export
+print.xrf <- function(x, ...) {
+  cat(paste0('An eXtreme RuleFit model of ', n_distinct(x$rules$rule_id), ' rules.'))
+  cat(paste0('\n\nFormula:\n\n'))
+  show(x$base_formula)
+}  
+
+#' Show an eXtreme RuleFit model
+#'
+#' @param x an xrf object to be shown
+#' 
+#' @author kholub
+#'
+#' @export
+show.xrf <- function(object) {
+  print(object)
+}
