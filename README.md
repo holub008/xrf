@@ -17,6 +17,14 @@ The general algorithm follows:
 * Evaluate the rules on the data to build a rule feature set
 * Fit a linear model to the original feature set joined with the rule feature set
     * The LASSO may be used to build a sparse final model
+    
+### Specifics to xrf
+
+* A gradient boosted tree ensemble is used to generate rules
+* Highly correlated (Spearman) rules are removed beyond a user specified threshold
+    * This step is slow & may be optimized or removed in the future
+* Coming soon: overlapped ranges are de-overlapped to improve model interprettability
+    * For a description of this algorithm, see [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf).
 
 ### Comparison to 'pre'
 [pre](https://cran.r-project.org/web/packages/pre/index.html) is a package on CRAN for fitting prediction rule ensembles, including RuleFit. xrf improves on some aspects of pre by:
