@@ -8,9 +8,11 @@ get_predictors <- function(formula) {
 }
 
 expand_formula <- function(formula, data) {
-  formula_terms <- all.vars(terms(formula, data = data))
-  as.formula(paste0(formula_terms[1], '~', 
-                    paste0(formula_terms[-1], collapse = '+')))
+  expanded_formula <- terms(formula, data = data)
+  formula_terms <- attr(expanded_formula, 'term.labels')
+  response <- all.vars(expanded_formula)[1]
+  as.formula(paste0(response, '~', 
+                    paste0(formula_terms, collapse = '+')))
 }
 
 add_predictors <- function(base_formula, new_predictors) {
