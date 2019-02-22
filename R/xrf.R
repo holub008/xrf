@@ -229,12 +229,14 @@ xrf <- function(object, ...) {
 #' @param max_rule_correlation the maxmimal allowed abslute Spearman correlation between any given pair of rules before on of the rules is removed
 #' @param sparse whether a sparse design matrix should be used
 #' @param prefit_xgb an xgboost model (of class xgb.Booster) to be used instead of the model that xrf would normally fit
+#' @param deoverlap if true, the tree derived rules are deoverlapped, in that the deoverlapped rule set contains no overlapped rules
 #' 
 #' @author kholub
 #' 
 #' @importFrom xgboost xgboost
 #' @importFrom xgboost xgb.model.dt.tree
 #' @import dplyr
+#' @import fuzzyjoin
 #' @importFrom Matrix sparse.model.matrix
 #' 
 #' @references 
@@ -253,7 +255,8 @@ xrf.formula <- function(object, data, family,
                                            nfolds = 5),
                         max_rule_correlation = .99,
                         sparse = TRUE,
-                        prefit_xgb = NULL) {
+                        prefit_xgb = NULL,
+                        deoverlap = FALSE) {
   expanded_formula <- expand_formula(object, data)
   # todo this breaks for naughty formulas
   response_var <- get_response(expanded_formula)
@@ -282,6 +285,10 @@ xrf.formula <- function(object, data, family,
       # TODO one simple approach would be to simply remove these feature splits from the rules
       # but that potentially dilutes the power of this method. for now, it's on the user to rectify this issue
     }
+  }
+  
+  if (deoverlap){
+    rules <- xrf_deoverlap_rules(rules)
   }
 
   rule_features <- evaluate_rules(rules, design_matrix)
