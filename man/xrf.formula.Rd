@@ -4,9 +4,10 @@
 \alias{xrf.formula}
 \title{Fit a RuleFit model}
 \usage{
-\method{xrf}{formula}(object, data, family, xgb_control = list(nrounds = 100,
-  max_depth = 3), glm_control = list(type.measure = "deviance", nfolds = 5),
-  max_rule_correlation = 0.99, sparse = TRUE, prefit_xgb = NULL)
+\method{xrf}{formula}(object, data, family, xgb_control = list(nrounds =
+  100, max_depth = 3), glm_control = list(type.measure = "deviance",
+  nfolds = 5), max_rule_correlation = 0.99, sparse = TRUE,
+  prefit_xgb = NULL, deoverlap = FALSE)
 }
 \arguments{
 \item{object}{a formula prescribing features to use in the model}
@@ -24,6 +25,8 @@
 \item{sparse}{whether a sparse design matrix should be used}
 
 \item{prefit_xgb}{an xgboost model (of class xgb.Booster) to be used instead of the model that xrf would normally fit}
+
+\item{deoverlap}{if true, the tree derived rules are deoverlapped, in that the deoverlapped rule set contains no overlapped rules}
 }
 \description{
 See Friedman & Popescu (2008) for a description of the general RuleFit algorithm.

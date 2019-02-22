@@ -5,8 +5,8 @@
 \title{Elastic net regularization algorithm}
 \usage{
 \method{glmnot}{default}(X, y, family, alpha = 1, nfolds = 5,
-  type.measure = "auc", formula = NULL, xlev = NULL, weights = rep(1,
-  nrow(X)))
+  type.measure = "auc", formula = NULL, xlev = NULL,
+  weights = rep(1, nrow(X)))
 }
 \arguments{
 \item{X}{a design matrix (sparse or otherwise) consisting of predictors to train on}

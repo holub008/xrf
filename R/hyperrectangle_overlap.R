@@ -50,8 +50,7 @@ build_xrf_rules_from_volumes <- function(volumes) {
     volumes %>%
       filter(is.finite(min)) %>%
       mutate(
-        rule_id = volume_id,
-        # TODO need to make this formula friendly!
+        rule_id = make.names(volume_id),
         feature = dimension,
         split = min,
         less_than = FALSE
@@ -59,10 +58,9 @@ build_xrf_rules_from_volumes <- function(volumes) {
     volumes %>%
       filter(is.finite(max)) %>%
       mutate(
-        rule_id = volume_id,
-        # TODO need to make this formula friendly!
+        rule_id = make.names(volume_id),
         feature = dimension,
-        split = min,
+        split = max,
         less_than = TRUE
       ),
     stringsAsFactors = FALSE
