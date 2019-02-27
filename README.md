@@ -23,17 +23,17 @@ The general algorithm follows:
 * A gradient boosted tree ensemble is used to generate rules
 * Highly correlated (Spearman) rules are removed beyond a user specified threshold
     * This step is slow & may be optimized or removed in the future
-* Coming soon: overlapped ranges are de-overlapped to improve model interprettability
+* Overlapped ranges are de-overlapped to improve model interprettability (i.e. all rules )
     * For a description of this algorithm, see [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf).
 
 ### Comparison to 'pre'
 [pre](https://cran.r-project.org/web/packages/pre/index.html) is a package on CRAN for fitting prediction rule ensembles, including RuleFit. xrf improves on some aspects of pre by:
-* Building more accurate models
-* Building models faster
+* Usually building more accurate models at fixed number of parameters
+* Usually building models faster
 * Building models that predict from missing data and new factor-levels
-* Providing a more limited interface to produce fewer bugs
+* Providing a more limited interface for less ambiguity
 
-As noted in the last point, xrf does provide less flexibility (e.g. cannot derive rules from RandomForest, or fitting trees using different algorithms) & fewer interpretive tools (this is in progress) than pre.
+As noted in the last point, xrf does provide less flexibility (e.g. cannot derive rules from RandomForest, or fitting trees using different algorithms) & fewer interpretive tools than pre.
 
 ## Example
 
@@ -112,4 +112,30 @@ On the test set:
 | pre      | .906     |
 | xgboost  | .924     | 
 | glmnet   | .888     |
+
+## De-overlapping rules
+```{r}
+set.seed(55455)
+census_income_limited <- census_income %>%
+  select(marital_status, capital_gain, education_num, age, capital_loss, hours_per_week, above_50k)
+experiment <- data.frame()
+for (trial_ix in 1:20) {
+  train_ix <- sample(nrow(census_income), floor(nrow(census_income) * .66))
+  census_train <- census_income_limited[train_ix, ]
+  census_test <- census_income_limited[-train_ix, ]
+
+  m_xrf_overlap <- xrf(above_50k ~ ., census_train, family = 'binomial', 
+                       xgb_control = list(nrounds = 100, max_depth = 2), deoverlap = FALSE)
+  m_xrf_deoverlap <- xrf(above_50k ~ ., census_train, family = 'binomial', 
+                         xgb_control = list(nrounds = 100, max_depth = 2), deoverlap = TRUE)
+  
+  preds_xrf_o <- predict(m_xrf_overlap, newdata=census_test)
+  preds_xrf_d <- predict(m_xrf_deoverlap, newdata=census_test)
+  trial <- list(
+    auc_overlap = auc(preds_xrf_o, census_test$above_50k),
+    auc_deoverlap = auc(preds_xrf_d, census_test$above_50k)
+  )
+  experiment <- rbind(experiment, trial, stringsAsFactors=FALSE)
+}
+```
 
