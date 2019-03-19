@@ -322,6 +322,7 @@ xrf.formula <- function(object, data, family,
                   family = family,
                   nfolds = glm_control$nfolds,
                   type.measure = glm_control$type.measure,
+                  pmax = glm_control$pmax,
                   alpha = 1, # this specifies the LASSO
                   sparse = sparse)
   
