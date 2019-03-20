@@ -11,6 +11,6 @@ RoxygenNote: 6.1.1
 Imports: 
     Matrix,
     glmnet,
-    xgboost,
+    xgboost (>= 0.71.2),
     dplyr,
     fuzzyjoin
