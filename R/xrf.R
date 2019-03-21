@@ -202,6 +202,26 @@ dedupe_train_rules <- function(evaluated_rules, max_absolute_correlation) {
   return(colnames(evaluated_rules)[selection_ixs])
 }
 
+build_feature_metadata <- function(data) {
+  all_features <- data.frame(feature_name = colnames(data))
+  
+  feature_metadata <- all_features %>%
+    mutate(
+      is_continuous = sapply(feature_name, function(fname){ is.numeric(data[[fname]]) })
+    )
+  
+  xlev <- feature_metadata %>% 
+    filter(!is_continuous) %>%
+    lapply(function(x) {
+      if(is.factor(x)) levels(x) else as.character(unique(x))
+    })
+  
+  list(
+    xlev = xlev,
+    feature_metadata = feature_metadata
+  )
+}
+
 #' Fit a RuleFit model
 #'
 #' S3 method for building an "eXtreme RuleFit" model.
@@ -325,11 +345,16 @@ xrf.formula <- function(object, data, family,
                   alpha = 1, # this specifies the LASSO
                   sparse = sparse)
   
+  # used in making the model exportable to pmml
+  feature_data = build_feature_metadata(data)
+  
   structure(list(glm = m_glm,
                  xgb = m_xgb,
                  base_formula = expanded_formula,
                  rule_augmented_formula = full_formula,
-                 rules = rules),
+                 rules = rules,
+                 xlev = feature_data$xlev,
+                 feature_metadata = feature_data$metadata),
             class = 'xrf')
 }
 
