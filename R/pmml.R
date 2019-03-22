@@ -15,7 +15,8 @@ has_matching_level <- function(feature_name, level_remainder, xlev) {
   for (ix in seq_along(feature_name)) {
     fn <- feature_name[ix]
     lr <- level_remainder[ix]
-    if (lr %in% xlev[fn]) {
+    
+    if (lr %in% xlev[[fn]]) {
       return(TRUE)
     }
   }
@@ -36,7 +37,7 @@ parse_feature_level <- function(feature_level, feature_metadata, xlev, rules) {
   
   classified_features <- feature_metadata %>%
     mutate(
-      level_remainder = sapply(feature_name, function(fn){ lstrip(feature_level, paste0(fn, ' ')) }), # model matrix convention adds a space between features and levels
+      level_remainder = sapply(feature_name, function(fn){ lstrip(feature_level, fn) }),
       may_be_rule_feature = sapply(feature_name, function(fn) { !startsWith(feature_level, fn) })
     )
   
@@ -109,8 +110,27 @@ pmml.xrf <- function(model, s='lambda.min') {
         xml_add_child("Application", name="xrf") %>%
         xml_add_sibling('Timestamp', as.character(now('GMT')))
   
-    predictor_list <- pmml_doc %>%
+    feature_list <- pmml_doc %>%
       xml_add_child("DataDictionary")
+    
+      for (ix in 1:nrow(model$feature_metadata)) {
+        row <- model$feature_metadata[ix,]
+        if (row$is_continuous) {
+          feature_list %>% xml_add_child('DataField', dataType='double', name=row$feature_name, optype='continuous')
+        }
+        else {
+          level_list <- feature_list %>% xml_add_child('DataField', dataType='string', name=row$feature_name, optype='categorical')
+          levels <- model$xlev[[row$feature_name]]
+          ignored = sapply(levels, function(l) { 
+            level_list %>% xml_add_child('Value', value = l)
+          })
+        }
+      }
+    
+    transformation_feature_list <- pmml_doc %>%
+      xml_add_child("TransformationDictionary")
+      
+      
     
     
 }
