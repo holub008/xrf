@@ -203,15 +203,16 @@ dedupe_train_rules <- function(evaluated_rules, max_absolute_correlation) {
 }
 
 build_feature_metadata <- function(data) {
-  all_features <- data.frame(feature_name = colnames(data))
+  all_features <- data.frame(feature_name = colnames(data), 
+                             stringsAsFactors = FALSE)
   
   feature_metadata <- all_features %>%
     mutate(
       is_continuous = sapply(feature_name, function(fname){ is.numeric(data[[fname]]) })
     )
   
-  xlev <- feature_metadata %>% 
-    filter(!is_continuous) %>%
+  xlev <- data %>% 
+    select_if(function(x) { !is.numeric(x) }) %>%
     lapply(function(x) {
       if(is.factor(x)) levels(x) else as.character(unique(x))
     })
@@ -354,7 +355,8 @@ xrf.formula <- function(object, data, family,
                  rule_augmented_formula = full_formula,
                  rules = rules,
                  xlev = feature_data$xlev,
-                 feature_metadata = feature_data$metadata),
+                 feature_metadata = feature_data$feature_metadata,
+                 family = family),
             class = 'xrf')
 }
 
