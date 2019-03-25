@@ -256,7 +256,8 @@ xrf.formula <- function(object, data, family,
                         max_rule_correlation = .99,
                         sparse = TRUE,
                         prefit_xgb = NULL,
-                        deoverlap = FALSE) {
+                        deoverlap = FALSE,
+                        weights = rep(1, nrow(data))) {
   expanded_formula <- expand_formula(object, data)
   # todo this breaks for naughty formulas
   response_var <- get_response(expanded_formula)
@@ -316,6 +317,7 @@ xrf.formula <- function(object, data, family,
   
   # todo glmnet is a bottleneck on data size - it may be interesting to fit the glm to much larger data, e.g. with spark or biglasso
   full_formula <- add_predictors(expanded_formula, colnames(rule_features))
+
   # glmnet automatically adds an intercept
   full_formula <- update(full_formula, . ~ . -1)
   m_glm <- glmnot(full_formula, full_data,
@@ -324,7 +326,8 @@ xrf.formula <- function(object, data, family,
                   type.measure = glm_control$type.measure,
                   pmax = glm_control$pmax,
                   alpha = 1, # this specifies the LASSO
-                  sparse = sparse)
+                  sparse = sparse,
+                  weights = weights)
   
   structure(list(glm = m_glm,
                  xgb = m_xgb,
