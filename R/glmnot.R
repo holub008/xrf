@@ -118,14 +118,17 @@ glmnot.default <- function(X, y, family,
                            alpha = 1,
                            nfolds = 5,
                            type.measure = 'auc',
+                           pmax = +Inf,
                            formula = NULL,
                            xlev = NULL,
                            weights = rep(1, nrow(X))) {
   m <- cv.glmnet(X, y, family = family,
               alpha = alpha,
               type.measure = type.measure,
+              pmax = pmax,
               nfolds = nfolds,
-              weights = weights)
+              weights = weights,
+              parallel = TRUE)
   structure(list(model = m,
                  formula = formula,
                  xlev = xlev), class = 'glmnot')
@@ -150,6 +153,7 @@ glmnot.formula <- function(formula, data, family,
                            alpha = 1,
                            nfolds = 5,
                            type.measure = 'auc',
+                           pmax = +Inf,
                            sparse = TRUE,
                            weights = rep(1, nrow(data))) {
   constant_factors <- colnames(
@@ -200,6 +204,7 @@ glmnot.formula <- function(formula, data, family,
          alpha = alpha, 
          nfolds = nfolds,
          type.measure = type.measure,
+         pmax = pmax,
          formula = final_formula,
          xlev = xlev,
          weights = weights)
