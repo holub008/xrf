@@ -337,12 +337,13 @@ xrf.formula <- function(object, data, family,
             class = 'xrf')
 }
 
-#' Draw predictions from a RuleFit model
+#' Draw predictions from a RuleFit xrf model
 #'
 #' @param object an object of class xrf
 #' @param sparse a logical indicating whether a sparse design matrix should be used
 #' @param lambda the lasso penalty parameter to be applied
 #' @param type the type of predicted value produced
+#' @param features one of "glm" for response from glm, or "all_features" for the new features, or 'rules_features' only for rules_features
 #'
 #' @author kholub
 #' 
@@ -352,7 +353,8 @@ xrf.formula <- function(object, data, family,
 predict.xrf <- function(object, newdata,
                         sparse = TRUE,
                         lambda = 'lambda.min',
-                        type = 'response') {
+                        type = 'response',
+                        features = 'glm') {
   # TODO: handle matrix
   # TODO: handle missing factor levels more elegantly (both for rule evaluation & glmnet)
   # TODO handle missing predictors (continuous) by failing or imputing?
@@ -365,8 +367,17 @@ predict.xrf <- function(object, newdata,
   full_data <- cbind(newdata, rules_features, 
                      stringsAsFactors = FALSE)
   # todo regenerating the data as a data.frame is not great
-  predict(object$glm, newdata = full_data, 
-          sparse = sparse, lambda = lambda, type = type)
+
+  if (features != 'glm')
+    print(cat('Generating', features, 'instead of glm response!'))
+
+  if (features == 'all_features')
+    full_data
+  else if (features == 'rules_features')
+    rules_features
+  else
+    predict(object$glm, newdata = full_data, 
+            sparse = sparse, lambda = lambda, type = type)
 }
 
 synthesize_conjunctions <- function(rules) {
