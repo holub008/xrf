@@ -121,14 +121,17 @@ glmnot.default <- function(X, y, family,
                            pmax = +Inf,
                            formula = NULL,
                            xlev = NULL,
-                           weights = rep(1, nrow(X))) {
+                           weights = rep(1, nrow(X)),
+                           intercept = TRUE
+                           ) {
   m <- cv.glmnet(X, y, family = family,
               alpha = alpha,
               type.measure = type.measure,
               pmax = pmax,
               nfolds = nfolds,
               weights = weights,
-              parallel = TRUE)
+              parallel = TRUE,
+              intercept = intercept)
   structure(list(model = m,
                  formula = formula,
                  xlev = xlev), class = 'glmnot')
@@ -155,7 +158,9 @@ glmnot.formula <- function(formula, data, family,
                            type.measure = 'auc',
                            pmax = +Inf,
                            sparse = TRUE,
-                           weights = rep(1, nrow(data))) {
+                           weights = rep(1, nrow(data)),
+                           intercept = TRUE
+                           ) {
   constant_factors <- colnames(
     data %>%
       select_if(function(column) {
@@ -205,6 +210,7 @@ glmnot.formula <- function(formula, data, family,
          nfolds = nfolds,
          type.measure = type.measure,
          pmax = pmax,
+         intercept = intercept,
          formula = final_formula,
          xlev = xlev,
          weights = weights)
