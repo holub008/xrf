@@ -124,14 +124,24 @@ glmnot.default <- function(X, y, family,
                            weights = rep(1, nrow(X)),
                            intercept = TRUE
                            ) {
-  m <- cv.glmnet(X, y, family = family,
-              alpha = alpha,
-              type.measure = type.measure,
-              pmax = pmax,
-              nfolds = nfolds,
-              weights = weights,
-              parallel = TRUE,
-              intercept = intercept)
+  if (pmax == +Inf)
+    m <- cv.glmnet(X, y, family = family,
+                alpha = alpha,
+                type.measure = type.measure,
+                nfolds = nfolds,
+                weights = weights,
+                parallel = TRUE,
+                intercept = intercept)
+  else
+      m <- cv.glmnet(X, y, family = family,
+                alpha = alpha,
+                type.measure = type.measure,
+                pmax = pmax,
+                nfolds = nfolds,
+                weights = weights,
+                parallel = TRUE,
+                intercept = intercept)
+
   structure(list(model = m,
                  formula = formula,
                  xlev = xlev), class = 'glmnot')
