@@ -124,6 +124,9 @@ glmnot.default <- function(X, y, family,
                            weights = rep(1, nrow(X)),
                            intercept = TRUE
                            ) {
+  if (is.null(intercept))
+    intercept = TRUE
+  
   if (pmax == +Inf)
     m <- cv.glmnet(X, y, family = family,
                 alpha = alpha,
