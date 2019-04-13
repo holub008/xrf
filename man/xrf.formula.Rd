@@ -7,7 +7,7 @@
 \method{xrf}{formula}(object, data, family, xgb_control = list(nrounds =
   100, max_depth = 3), glm_control = list(type.measure = "deviance",
   nfolds = 5), max_rule_correlation = 0.99, sparse = TRUE,
-  prefit_xgb = NULL, deoverlap = FALSE)
+  prefit_xgb = NULL, deoverlap = FALSE, weights = rep(1, nrow(data)))
 }
 \arguments{
 \item{object}{a formula prescribing features to use in the model}

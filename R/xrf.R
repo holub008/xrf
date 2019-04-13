@@ -338,24 +338,20 @@ xrf.formula <- function(object, data, family,
             class = 'xrf')
 }
 
-#' Draw predictions from a RuleFit xrf model
+#' Generate the design matrix from a RuleFit xrf model
 #'
 #' @param object an object of class xrf
 #' @param sparse a logical indicating whether a sparse design matrix should be used
-#' @param lambda the lasso penalty parameter to be applied
-#' @param type the type of predicted value produced
-#' @param features one of "glm" for response from glm, or "all_features" for the new features, or 'rules_features' only for rules_features
 #'
-#' @author kholub
-#' 
+#' @author yama1968
+#'
 #' @importFrom Matrix sparse.model.matrix
 #'
+#' @method generate_design_matrix xrf
+#'
 #' @export
-predict.xrf <- function(object, newdata,
-                        sparse = TRUE,
-                        lambda = 'lambda.min',
-                        type = 'response',
-                        features = 'glm') {
+generate_design_matrix.xrf <- function(object, newdata,
+                                       sparse = TRUE) {
   # TODO: handle matrix
   # TODO: handle missing factor levels more elegantly (both for rule evaluation & glmnet)
   # TODO handle missing predictors (continuous) by failing or imputing?
@@ -367,18 +363,29 @@ predict.xrf <- function(object, newdata,
   rules_features <- evaluate_rules(object$rules, raw_design_matrix)
   full_data <- cbind(newdata, rules_features, 
                      stringsAsFactors = FALSE)
-  # todo regenerating the data as a data.frame is not great
 
-  if (features != 'glm')
-    print(cat('Generating', features, 'instead of glm response!'))
+  full_data
+}
 
-  if (features == 'all_features')
-    full_data
-  else if (features == 'rules_features')
-    rules_features
-  else
-    predict(object$glm, newdata = full_data, 
-            sparse = sparse, lambda = lambda, type = type)
+#' Draw predictions from a RuleFit xrf model
+#'
+#' @param object an object of class xrf
+#' @param sparse a logical indicating whether a sparse design matrix should be used
+#' @param lambda the lasso penalty parameter to be applied
+#' @param type the type of predicted value produced
+#'
+#' @author kholub
+#' 
+#' @export
+predict.xrf <- function(object, newdata,
+                        sparse = TRUE,
+                        lambda = 'lambda.min',
+                        type = 'response') {
+  stopifnot(is.data.frame(newdata))
+  full_data <- generate_design_matrix(object, newdata, sparse)
+
+  predict(object$glm, newdata = full_data, 
+          sparse = sparse, lambda = lambda, type = type)
 }
 
 synthesize_conjunctions <- function(rules) {

@@ -5,7 +5,8 @@
 \title{Elastic net regularization}
 \usage{
 \method{glmnot}{formula}(formula, data, family, alpha = 1, nfolds = 5,
-  type.measure = "auc", sparse = TRUE, weights = rep(1, nrow(data)))
+  type.measure = "auc", pmax = +Inf, sparse = TRUE,
+  weights = rep(1, nrow(data)), intercept = TRUE)
 }
 \arguments{
 \item{formula}{a specification of the features used to build the design matrix}
