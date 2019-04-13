@@ -52,8 +52,8 @@ xrf_preconditions <- function(family, xgb_control, glm_control,
     stop('Must supply a num_class list element in xgb_control when using multinomial objective')
   }
   
-  if (length(intersect(c('type.measure', 'nfolds'), names(glm_control))) < 2) {
-    stop('Must supply "type.measure" and "nfolds" as glm_control parameters')
+  if (length(intersect(c('type.measure', 'nfolds', 'foldid'), names(glm_control))) < 2) {
+    stop('Must supply "type.measure" and ("nfolds" or "foldid") as glm_control parameters')
   }
   
   allowed_tree_ensemble_classes <- c('xgb.Booster')

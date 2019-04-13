@@ -103,6 +103,7 @@ glmnot <- function(object, ...) {
 #'
 #' @param X a design matrix (sparse or otherwise) consisting of predictors to train on
 #' @param y a vector of responses to train on
+#' @param family family of the fitted model
 #' @param alpha the elastic net parameter
 #' @param formula the formula specify the design matrix (optional)
 #' @param xlev per feature levels (optional)
@@ -139,8 +140,10 @@ glmnot.default <- function(X, y, family,
 #' @param data a data frame used to build the model
 #' @param family family of the fitted model
 #' @param alpha the elastic net parameter
-#' @param sparse logical indicating if the constructed design matrix should be sparse or dense
-#' @param weights weights on observations in the train data
+#' @param formula the formula specify the design matrix (optional)
+#' @param xlev per feature levels (optional)
+#' @param weights weights on observations in X
+#' @param glm_control other parameters to glm
 #'
 #' @author kholub
 #'
