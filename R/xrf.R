@@ -347,10 +347,8 @@ xrf.formula <- function(object, data, family,
 #'
 #' @importFrom Matrix sparse.model.matrix
 #'
-#' @method generate_design_matrix xrf
-#'
 #' @export
-generate_design_matrix.xrf <- function(object, newdata,
+generate_xrf_design_matrix <- function(object, newdata,
                                        sparse = TRUE) {
   # TODO: handle matrix
   # TODO: handle missing factor levels more elegantly (both for rule evaluation & glmnet)
@@ -382,7 +380,7 @@ predict.xrf <- function(object, newdata,
                         lambda = 'lambda.min',
                         type = 'response') {
   stopifnot(is.data.frame(newdata))
-  full_data <- generate_design_matrix(object, newdata, sparse)
+  full_data <- generate_xrf_design_matrix(object, newdata, sparse)
 
   predict(object$glm, newdata = full_data, 
           sparse = sparse, lambda = lambda, type = type)
