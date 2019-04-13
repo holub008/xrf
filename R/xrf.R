@@ -256,8 +256,7 @@ xrf.formula <- function(object, data, family,
                         max_rule_correlation = .99,
                         sparse = TRUE,
                         prefit_xgb = NULL,
-                        deoverlap = FALSE,
-                        weights = rep(1, nrow(data))) {
+                        deoverlap = FALSE) {
   expanded_formula <- expand_formula(object, data)
   # todo this breaks for naughty formulas
   response_var <- get_response(expanded_formula)
@@ -325,7 +324,6 @@ xrf.formula <- function(object, data, family,
                     family = family,
                     alpha = 1, # this specifies the LASSO
                     sparse = sparse,
-                    weights = weights,
                     glm_control = glm_control)
 
   structure(list(glm = m_glm,

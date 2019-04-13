@@ -119,12 +119,10 @@ glmnot.default <- function(X, y, family,
                            alpha = 1,
                            formula = NULL,
                            xlev = NULL,
-                           weights = rep(1, nrow(X)),
                            glm_control = list()
                            ) {
   cv.glmnet.args <- list(X, y, family = family,
-                alpha = alpha,
-                weights = weights)
+                alpha = alpha)
   cv.glmnet.args <- append(cv.glmnet.args, glm_control)
 
   m <- do.call(cv.glmnet, cv.glmnet.args)
@@ -155,7 +153,6 @@ glmnot.formula <- function(formula, data, family,
                            alpha = 1,
                            type.measure = 'auc',
                            sparse = TRUE,
-                           weights = rep(1, nrow(data)),
                            glm_control
                            ) {
   constant_factors <- colnames(
@@ -206,6 +203,5 @@ glmnot.formula <- function(formula, data, family,
          alpha = alpha, 
          formula = final_formula,
          xlev = xlev,
-         weights = weights,
          glm_control = glm_control)
 }
