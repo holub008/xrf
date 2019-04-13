@@ -320,16 +320,14 @@ xrf.formula <- function(object, data, family,
 
   # glmnet automatically adds an intercept
   full_formula <- update(full_formula, . ~ . -1)
+
   m_glm <- glmnot(full_formula, full_data,
-                  family = family,
-                  nfolds = glm_control$nfolds,
-                  type.measure = glm_control$type.measure,
-                  pmax = ifelse(is.null(glm_control$pmax), +Inf, glm_control$pmax),
-                  intercept = ifelse(glm_control$intercept == FALSE, FALSE, TRUE),
-                  alpha = 1, # this specifies the LASSO
-                  sparse = sparse,
-                  weights = weights)
-  
+                    family = family,
+                    alpha = 1, # this specifies the LASSO
+                    sparse = sparse,
+                    weights = weights,
+                    glm_control = glm_control)
+
   structure(list(glm = m_glm,
                  xgb = m_xgb,
                  base_formula = expanded_formula,
