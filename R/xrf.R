@@ -337,6 +337,7 @@ xrf.formula <- function(object, data, family,
 #' Generate the design matrix from a RuleFit xrf model
 #'
 #' @param object an object of class xrf
+#' @param newdata data to generate on
 #' @param sparse a logical indicating whether a sparse design matrix should be used
 #'
 #' @author yama1968
@@ -364,6 +365,7 @@ generate_xrf_design_matrix <- function(object, newdata,
 #' Draw predictions from a RuleFit xrf model
 #'
 #' @param object an object of class xrf
+#' @param newdata data to predict on
 #' @param sparse a logical indicating whether a sparse design matrix should be used
 #' @param lambda the lasso penalty parameter to be applied
 #' @param type the type of predicted value produced

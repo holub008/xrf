@@ -9,6 +9,8 @@ generate_xrf_design_matrix(object, newdata, sparse = TRUE)
 \arguments{
 \item{object}{an object of class xrf}
 
+\item{newdata}{data to generate on}
+
 \item{sparse}{a logical indicating whether a sparse design matrix should be used}
 }
 \description{

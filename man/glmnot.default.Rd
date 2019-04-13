@@ -5,7 +5,7 @@
 \title{Elastic net regularization algorithm}
 \usage{
 \method{glmnot}{default}(X, y, family, alpha = 1, formula = NULL,
-  xlev = NULL, weights = rep(1, nrow(X)), glm_control = list())
+  xlev = NULL, glm_control = list())
 }
 \arguments{
 \item{X}{a design matrix (sparse or otherwise) consisting of predictors to train on}
@@ -20,9 +20,9 @@
 
 \item{xlev}{per feature levels (optional)}
 
-\item{weights}{weights on observations in X}
-
 \item{glm_control}{other parameters to glm}
+
+\item{weights}{weights on observations in X}
 }
 \description{
 Elastic net regularization algorithm

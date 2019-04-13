@@ -10,6 +10,8 @@
 \arguments{
 \item{object}{an object of class xrf}
 
+\item{newdata}{data to predict on}
+
 \item{sparse}{a logical indicating whether a sparse design matrix should be used}
 
 \item{lambda}{the lasso penalty parameter to be applied}
