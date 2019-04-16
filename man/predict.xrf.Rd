@@ -2,13 +2,15 @@
 % Please edit documentation in R/xrf.R
 \name{predict.xrf}
 \alias{predict.xrf}
-\title{Draw predictions from a RuleFit model}
+\title{Draw predictions from a RuleFit xrf model}
 \usage{
 \method{predict}{xrf}(object, newdata, sparse = TRUE,
   lambda = "lambda.min", type = "response")
 }
 \arguments{
 \item{object}{an object of class xrf}
+
+\item{newdata}{data to predict on}
 
 \item{sparse}{a logical indicating whether a sparse design matrix should be used}
 
@@ -17,7 +19,7 @@
 \item{type}{the type of predicted value produced}
 }
 \description{
-Draw predictions from a RuleFit model
+Draw predictions from a RuleFit xrf model
 }
 \author{
 kholub

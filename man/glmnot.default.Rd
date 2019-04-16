@@ -4,22 +4,23 @@
 \alias{glmnot.default}
 \title{Elastic net regularization algorithm}
 \usage{
-\method{glmnot}{default}(X, y, family, alpha = 1, nfolds = 5,
-  type.measure = "auc", formula = NULL, xlev = NULL,
-  weights = rep(1, nrow(X)))
+\method{glmnot}{default}(X, y, family, alpha = 1, formula = NULL,
+  xlev = NULL, glm_control = list())
 }
 \arguments{
 \item{X}{a design matrix (sparse or otherwise) consisting of predictors to train on}
 
 \item{y}{a vector of responses to train on}
 
-\item{family}{the family of the model to be fitted}
+\item{family}{family of the fitted model}
 
 \item{alpha}{the elastic net parameter}
 
 \item{formula}{the formula specify the design matrix (optional)}
 
 \item{xlev}{per feature levels (optional)}
+
+\item{glm_control}{other parameters to glm}
 
 \item{weights}{weights on observations in X}
 }

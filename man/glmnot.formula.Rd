@@ -4,8 +4,8 @@
 \alias{glmnot.formula}
 \title{Elastic net regularization}
 \usage{
-\method{glmnot}{formula}(formula, data, family, alpha = 1, nfolds = 5,
-  type.measure = "auc", sparse = TRUE, weights = rep(1, nrow(data)))
+\method{glmnot}{formula}(formula, data, family, alpha = 1,
+  type.measure = "auc", sparse = TRUE, glm_control)
 }
 \arguments{
 \item{formula}{a specification of the features used to build the design matrix}
@@ -16,9 +16,13 @@
 
 \item{alpha}{the elastic net parameter}
 
-\item{sparse}{logical indicating if the constructed design matrix should be sparse or dense}
+\item{glm_control}{other parameters to glm}
 
-\item{weights}{weights on observations in the train data}
+\item{formula}{the formula specify the design matrix (optional)}
+
+\item{xlev}{per feature levels (optional)}
+
+\item{weights}{weights on observations in X}
 }
 \description{
 Elastic net regularization

@@ -103,11 +103,12 @@ glmnot <- function(object, ...) {
 #'
 #' @param X a design matrix (sparse or otherwise) consisting of predictors to train on
 #' @param y a vector of responses to train on
-#' @param family the family of the model to be fitted
+#' @param family family of the fitted model
 #' @param alpha the elastic net parameter
 #' @param formula the formula specify the design matrix (optional)
 #' @param xlev per feature levels (optional)
 #' @param weights weights on observations in X
+#' @param glm_control other parameters to glm
 #'
 #' @author kholub
 #'
@@ -116,19 +117,16 @@ glmnot <- function(object, ...) {
 #' @export
 glmnot.default <- function(X, y, family,
                            alpha = 1,
-                           nfolds = 5,
-                           type.measure = 'auc',
-                           pmax = +Inf,
                            formula = NULL,
                            xlev = NULL,
-                           weights = rep(1, nrow(X))) {
-  m <- cv.glmnet(X, y, family = family,
-              alpha = alpha,
-              type.measure = type.measure,
-              pmax = pmax,
-              nfolds = nfolds,
-              weights = weights,
-              parallel = TRUE)
+                           glm_control = list()
+                           ) {
+  cv.glmnet.args <- list(X, y, family = family,
+                alpha = alpha)
+  cv.glmnet.args <- append(cv.glmnet.args, glm_control)
+
+  m <- do.call(cv.glmnet, cv.glmnet.args)
+  
   structure(list(model = m,
                  formula = formula,
                  xlev = xlev), class = 'glmnot')
@@ -140,8 +138,10 @@ glmnot.default <- function(X, y, family,
 #' @param data a data frame used to build the model
 #' @param family family of the fitted model
 #' @param alpha the elastic net parameter
-#' @param sparse logical indicating if the constructed design matrix should be sparse or dense
-#' @param weights weights on observations in the train data
+#' @param formula the formula specify the design matrix (optional)
+#' @param xlev per feature levels (optional)
+#' @param weights weights on observations in X
+#' @param glm_control other parameters to glm
 #'
 #' @author kholub
 #'
@@ -151,11 +151,10 @@ glmnot.default <- function(X, y, family,
 #' @export 
 glmnot.formula <- function(formula, data, family,
                            alpha = 1,
-                           nfolds = 5,
                            type.measure = 'auc',
-                           pmax = +Inf,
                            sparse = TRUE,
-                           weights = rep(1, nrow(data))) {
+                           glm_control
+                           ) {
   constant_factors <- colnames(
     data %>%
       select_if(function(column) {
@@ -202,10 +201,7 @@ glmnot.formula <- function(formula, data, family,
   
   glmnot(X, y, family, 
          alpha = alpha, 
-         nfolds = nfolds,
-         type.measure = type.measure,
-         pmax = pmax,
          formula = final_formula,
          xlev = xlev,
-         weights = weights)
+         glm_control = glm_control)
 }

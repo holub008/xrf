@@ -52,8 +52,8 @@ xrf_preconditions <- function(family, xgb_control, glm_control,
     stop('Must supply a num_class list element in xgb_control when using multinomial objective')
   }
   
-  if (length(intersect(c('type.measure', 'nfolds'), names(glm_control))) < 2) {
-    stop('Must supply "type.measure" and "nfolds" as glm_control parameters')
+  if (length(intersect(c('type.measure', 'nfolds', 'foldid'), names(glm_control))) < 2) {
+    stop('Must supply "type.measure" and ("nfolds" or "foldid") as glm_control parameters')
   }
   
   allowed_tree_ensemble_classes <- c('xgb.Booster')
@@ -256,8 +256,7 @@ xrf.formula <- function(object, data, family,
                         max_rule_correlation = .99,
                         sparse = TRUE,
                         prefit_xgb = NULL,
-                        deoverlap = FALSE,
-                        weights = rep(1, nrow(data))) {
+                        deoverlap = FALSE) {
   expanded_formula <- expand_formula(object, data)
   # todo this breaks for naughty formulas
   response_var <- get_response(expanded_formula)
@@ -320,15 +319,13 @@ xrf.formula <- function(object, data, family,
 
   # glmnet automatically adds an intercept
   full_formula <- update(full_formula, . ~ . -1)
+
   m_glm <- glmnot(full_formula, full_data,
-                  family = family,
-                  nfolds = glm_control$nfolds,
-                  type.measure = glm_control$type.measure,
-                  pmax = glm_control$pmax,
-                  alpha = 1, # this specifies the LASSO
-                  sparse = sparse,
-                  weights = weights)
-  
+                    family = family,
+                    alpha = 1, # this specifies the LASSO
+                    sparse = sparse,
+                    glm_control = glm_control)
+
   structure(list(glm = m_glm,
                  xgb = m_xgb,
                  base_formula = expanded_formula,
@@ -337,22 +334,19 @@ xrf.formula <- function(object, data, family,
             class = 'xrf')
 }
 
-#' Draw predictions from a RuleFit model
+#' Generate the design matrix from a RuleFit xrf model
 #'
 #' @param object an object of class xrf
+#' @param newdata data to generate on
 #' @param sparse a logical indicating whether a sparse design matrix should be used
-#' @param lambda the lasso penalty parameter to be applied
-#' @param type the type of predicted value produced
 #'
-#' @author kholub
-#' 
+#' @author yama1968
+#'
 #' @importFrom Matrix sparse.model.matrix
 #'
 #' @export
-predict.xrf <- function(object, newdata,
-                        sparse = TRUE,
-                        lambda = 'lambda.min',
-                        type = 'response') {
+generate_xrf_design_matrix <- function(object, newdata,
+                                       sparse = TRUE) {
   # TODO: handle matrix
   # TODO: handle missing factor levels more elegantly (both for rule evaluation & glmnet)
   # TODO handle missing predictors (continuous) by failing or imputing?
@@ -364,7 +358,28 @@ predict.xrf <- function(object, newdata,
   rules_features <- evaluate_rules(object$rules, raw_design_matrix)
   full_data <- cbind(newdata, rules_features, 
                      stringsAsFactors = FALSE)
-  # todo regenerating the data as a data.frame is not great
+
+  full_data
+}
+
+#' Draw predictions from a RuleFit xrf model
+#'
+#' @param object an object of class xrf
+#' @param newdata data to predict on
+#' @param sparse a logical indicating whether a sparse design matrix should be used
+#' @param lambda the lasso penalty parameter to be applied
+#' @param type the type of predicted value produced
+#'
+#' @author kholub
+#' 
+#' @export
+predict.xrf <- function(object, newdata,
+                        sparse = TRUE,
+                        lambda = 'lambda.min',
+                        type = 'response') {
+  stopifnot(is.data.frame(newdata))
+  full_data <- generate_xrf_design_matrix(object, newdata, sparse)
+
   predict(object$glm, newdata = full_data, 
           sparse = sparse, lambda = lambda, type = type)
 }
