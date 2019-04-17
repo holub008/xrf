@@ -102,6 +102,16 @@ pmml.xrf <- function(model, s='lambda.min') {
   }
   
   glm_coefficients <- extract_glmnot_coefficients(model, s)
+  rule_id_to_subspaces <- model$rules %>%
+    group_by(rule_id) %>%
+    do(
+      features = sort(unique(.$feature))
+    ) 
+  
+  rule_subspaces <- rule_id_to_subspaces %>%
+    pull(features) %>%
+    unique()
+  
   
   pmml_doc <- xml_new_root('PMML', .version="4.1", xmlns="http://www.dmg.org/PMML-4_1")
   
@@ -129,6 +139,59 @@ pmml.xrf <- function(model, s='lambda.min') {
     
     transformation_feature_list <- pmml_doc %>%
       xml_add_child("TransformationDictionary")
+    
+      # although possible to do this more efficiently - by grouping subspaces and building multi-paritioned ranges (vs, single split) as in deoverlapping
+      # we skip it, because lots of work. probably wortth revisiting
+      for (ix in 1:nrow(model$rules)) {
+        rule <- model$rules[ix, ]
+        is_left_region <- rule$less_than
+        parsed_feature_level <- parse_feature_level(rule$feature, model$feature_metadata, model$xlev, model$rules)
+        if (parsed_feature_level$is_continuous) {
+          transformation_feature_list %>%
+            xml_add_child('DerivedField', dataType='string', name = paste0(rule$rule_id, '_', parsed_feature_level$feature_name)) %>%
+              xml_add_child('Discretize', defaultValue="TODO", field=parsed_feature_level$feature_name, mapMissingTo="TODO") %>%
+                xml_add_child('DiscretizedBin', binValue="true") %>%
+                  xml_add_child('Interval', closure = if (is_left_region) "openOpen" else "closedOpen", 
+                                leftMargin = if (is_left_region) -Inf else rule$split, rightMargin = if (is_left_region) rule$split else Inf)
+        }
+      }
+    
+      # use the discretizations to create interactions / conjunctions
+      distinct_rule_ids <- model$rules$rule_id %>% unique()
+      for (write_rule_id in distinct_rule_ids) {
+        rule_features <- model$rules %>%
+          filter(rule_id == write_rule_id) %>%
+        interaction_degree <- nrow(rule_features)
+        
+        interaction_function<- transformation_filter_list %>%
+          xml_add_child('DefineFunction', dataType='double', name=paste0(write_rule_id, '_interaction_function'), optype='continuous')
+        for (interaction_ix in 1:interaction_degree) {
+          interaction_function %>%
+            # within rules, all interactions are categorical
+            xml_add_child('ParameterField', dataType = 'string', name = paste0('f', as.character(interaction_ix)), optype='categorical')
+        }
+        
+        map <- interaction_function %>%
+          xml_add_child('MapValues', outputColumn='InteractionScore')
+        
+        for (interaction_ix in 1:interaction_degree) {
+          map %>%
+            xml_add_child('FieldColumnPair', column = paste0('f', as.character(interaction_ix)), field = paste0('f', as.character(interaction_ix)))
+        }
+        
+        # So, yea, this will be really inefficient if a subspace is packed with heavily abutted bins...
+        row <- map %>%
+          xml_add_child('InlineTable') %>%
+          xml_add_child('row')
+        
+        for (interaction_ix in 1:interaction_degree) {
+          %>%
+            xml_add_child(paste0('f', as.character(interaction_ix)), ) 
+        }
+        
+        
+          
+      }
       
       
     
