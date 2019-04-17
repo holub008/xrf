@@ -166,6 +166,29 @@ evaluate_rules <- function(rules, data) {
   rule_features
 }
 
+evaluate_rules_dense_only <- function(rules, data) {
+  data_df <- as.data.frame(data)
+  per_rule_evaluation <- rules %>%
+    group_by(rule_id) %>%
+    do (
+      # yes, this is gross
+      # yes, this is fast
+      rule_evaluation = eval(parse(text=paste0(
+        paste0('`', .$feature, '`'),
+        ifelse(.$less_than, '<', '>='),
+        .$split,
+        collapse = ' & '
+      )), 
+      data_df) %>%
+        as.integer() %>%
+        data.frame()
+    )
+  rule_features <- bind_cols(per_rule_evaluation$rule_evaluation)
+  colnames(rule_features) <- per_rule_evaluation$rule_id
+  
+  rule_features
+}
+
 # returns the list of rules with non-zero variance
 # if, by an unexpected outcome of the tree fitting process, a rule shows no variance, remove it
 remove_no_variance_rules <- function(evaluated_rules) {
@@ -180,7 +203,7 @@ remove_no_variance_rules <- function(evaluated_rules) {
 dedupe_train_rules <- function(evaluated_rules) {
   as.matrix(evaluated_rules) %>%
     unique(MARGIN=2) %>%
-    as.data.frame()
+    colnames()
 }
 
 #' Fit a RuleFit model
@@ -270,7 +293,7 @@ xrf.formula <- function(object, data, family,
     rules <- xrf_deoverlap_rules(rules)
   }
 
-  rule_features <- evaluate_rules(rules, design_matrix)
+  rule_features <- if (sparse) evaluate_rules(rules, design_matrix) else evaluate_rules_dense_only(rules, design_matrix)
   
   varying_rules <- remove_no_variance_rules(rule_features)
   rule_features <- rule_features[, varying_rules]
@@ -328,13 +351,12 @@ generate_xrf_design_matrix <- function(object, newdata,
                                        sparse = TRUE) {
   # TODO: handle matrix
   # TODO: handle missing factor levels more elegantly (both for rule evaluation & glmnet)
-  # TODO handle missing predictors (continuous) by failing or imputing?
   # TODO: when rules have a zero coefficient, we don't need to evaluate them
   stopifnot(is.data.frame(newdata))
   design_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
   
   raw_design_matrix <- design_matrix_method(object$base_formula, newdata)
-  rules_features <- evaluate_rules(object$rules, raw_design_matrix)
+  rules_features <- if (sparse) evaluate_rules(object$rules, raw_design_matrix) else evaluate_rules_dense_only(object$rules, raw_design_matrix)
   full_data <- cbind(newdata, rules_features, 
                      stringsAsFactors = FALSE)
 
