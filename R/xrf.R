@@ -176,30 +176,11 @@ remove_no_variance_rules <- function(evaluated_rules) {
   return(colnames(evaluated_rules)[keep_columns])
 }
 
-# returns the list of deduped rule_ids
-# note that this is an approximate algorithm, since correlation inequality is not transitive
-dedupe_train_rules <- function(evaluated_rules, max_absolute_correlation) {
-  if (ncol(evaluated_rules) < 2) {
-    return(colnames(evaluated_rules))
-  }
-  
-  duplicate_rule_ixs <- c()
-  
-  # TODO parallelize
-  for (rule1_ix in 1:(ncol(evaluated_rules) -1)) {
-    if (rule1_ix %in% duplicate_rule_ixs) next
-    
-    rule2_candidate_ixs <- setdiff((rule1_ix + 1):ncol(evaluated_rules), duplicate_rule_ixs)
-    for (rule2_ix in rule2_candidate_ixs) {
-      rho <- cor(evaluated_rules[, rule1_ix], evaluated_rules[, rule2_ix])
-      if (abs(rho) > max_absolute_correlation) {
-        duplicate_rule_ixs <- c(duplicate_rule_ixs, rule2_ix)
-      }
-    }
-  }
-  
-  selection_ixs <- if(length(duplicate_rule_ixs) > 0) -duplicate_rule_ixs else 1:ncol(evaluated_rules)
-  return(colnames(evaluated_rules)[selection_ixs])
+# removes any exactly equal rules
+dedupe_train_rules <- function(evaluated_rules) {
+  as.matrix(evaluated_rules) %>%
+    unique(MARGIN=2) %>%
+    as.data.frame()
 }
 
 #' Fit a RuleFit model
@@ -226,7 +207,6 @@ xrf <- function(object, ...) {
 #' @param family the family of the fitted model. one of 'gaussian', 'binomial', 'multinomial'
 #' @param xgb_control a list of parameters for xgboost. must supply an nrounds argument
 #' @param glm_control a list of parameters for the glmnet fit. must supply a type.measure and nfolds arguments (for the lambda cv)
-#' @param max_rule_correlation the maxmimal allowed abslute Spearman correlation between any given pair of rules before on of the rules is removed
 #' @param sparse whether a sparse design matrix should be used
 #' @param prefit_xgb an xgboost model (of class xgb.Booster) to be used instead of the model that xrf would normally fit
 #' @param deoverlap if true, the tree derived rules are deoverlapped, in that the deoverlapped rule set contains no overlapped rules
@@ -253,7 +233,6 @@ xrf.formula <- function(object, data, family,
                         xgb_control = list(nrounds = 100, max_depth = 3),
                         glm_control = list(type.measure = 'deviance',
                                            nfolds = 5),
-                        max_rule_correlation = .99,
                         sparse = TRUE,
                         prefit_xgb = NULL,
                         deoverlap = FALSE) {
@@ -298,7 +277,7 @@ xrf.formula <- function(object, data, family,
   rules <- rules %>%
     filter(rule_id %in% varying_rules)
   
-  non_duplicate_rules <- dedupe_train_rules(rule_features, max_rule_correlation)
+  non_duplicate_rules <- dedupe_train_rules(rule_features)
   rule_features <- rule_features[, non_duplicate_rules]
   rules <- rules %>%
     filter(rule_id %in% non_duplicate_rules)

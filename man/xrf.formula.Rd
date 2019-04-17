@@ -6,8 +6,7 @@
 \usage{
 \method{xrf}{formula}(object, data, family, xgb_control = list(nrounds =
   100, max_depth = 3), glm_control = list(type.measure = "deviance",
-  nfolds = 5), max_rule_correlation = 0.99, sparse = TRUE,
-  prefit_xgb = NULL, deoverlap = FALSE)
+  nfolds = 5), sparse = TRUE, prefit_xgb = NULL, deoverlap = FALSE)
 }
 \arguments{
 \item{object}{a formula prescribing features to use in the model}
@@ -19,8 +18,6 @@
 \item{xgb_control}{a list of parameters for xgboost. must supply an nrounds argument}
 
 \item{glm_control}{a list of parameters for the glmnet fit. must supply a type.measure and nfolds arguments (for the lambda cv)}
-
-\item{max_rule_correlation}{the maxmimal allowed abslute Spearman correlation between any given pair of rules before on of the rules is removed}
 
 \item{sparse}{whether a sparse design matrix should be used}
 
