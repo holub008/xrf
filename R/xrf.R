@@ -1,3 +1,6 @@
+#############################################
+## functions for preconditions on user input
+#############################################
 condition_xgb_control <- function(family, xgb_control, data, response_var) {
   # this is a duplicated but necessary check
   if (!(response_var %in% colnames(data))) {
@@ -78,6 +81,10 @@ get_xgboost_objective <- function(family) {
   stop(paste0('Unrecognized family ', family, ' which should have failed fast in preconditions'))
 }
 
+#############################################
+## functions for extracting xgboost rule sets
+#############################################
+
 augment_rules <- function(row, rule_ids, less_than) {
   bind_rows(
     lapply(rule_ids, function(rule_id) {
@@ -136,6 +143,86 @@ extract_xgb_rules <- function(m) {
   rules
 }
 
+
+##################################################
+## functions for parsing out model matrix features
+##################################################
+build_feature_metadata <- function(data) {
+  all_features <- data.frame(feature_name = colnames(data), 
+                             stringsAsFactors = FALSE)
+  
+  feature_metadata <- all_features %>%
+    mutate(
+      is_continuous = sapply(feature_name, function(fname){ is.numeric(data[[fname]]) })
+    )
+  
+  xlev <- data %>% 
+    select_if(function(x) { !is.numeric(x) }) %>%
+    lapply(function(x) {
+      if(is.factor(x)) levels(x) else as.character(unique(x))
+    })
+  
+  list(
+    xlev = xlev,
+    feature_metadata = feature_metadata
+  )
+}
+
+has_matching_level <- function(feature_name, level_remainder, xlev) {
+  for (ix in seq_along(feature_name)) {
+    fn <- feature_name[ix]
+    lr <- level_remainder[ix]
+    
+    if (lr %in% xlev[[fn]]) {
+      return(TRUE)
+    }
+  }
+  
+  return(FALSE)
+}
+
+correct_xgb_sparse_categoricals <- function(rules, feature_metadata, xlev,
+                                            # .5 matches what xgboost does with dense matrices
+                                            categorical_split_value = .5) {
+  if (nrow(rules) == 0) {
+    return(rules)
+  }
+  
+  for (row_ix in 1:nrow(rules)) {
+    feature_level <- rules[row_ix, 'feature']
+    classified_features <- feature_metadata %>%
+      mutate(
+        level_remainder = sapply(feature_name, function(fn){ lstrip(feature_level, fn) }),
+        may_be_rule_feature = sapply(feature_name, function(fn) { !startsWith(feature_level, fn) })
+      )
+    
+    feature_level_matches <- classified_features %>%
+      filter(!may_be_rule_feature) %>%
+      filter(level_remainder == '' | has_matching_level(feature_name, level_remainder, xlev))
+    
+    if (nrow(feature_level_matches) > 1) {
+      # this means that several feaures and their levels may be concatenated to produce the same column name
+      # e.g. feature "ora" with level "nge" and another feature "oran" with level "ge". or even a continuous with name "orange"
+      stop(paste0('In attempting to parse sparse design matrix columns, several feature/level matches found for: "', feature_level, '". Conservatively failing to user to change feature/level names or use dense matrices.'))
+    }
+    
+    if (!feature_level_matches$is_continuous) {
+      # xgb always makes the split value negative, so that "Missing" (= 0 one-hot) really maps to "Yes" (the left, less than split)
+      # and the right, greater than split (1 one-hot) maps to "No"
+      # as such, we don't have to invert the inequality ("less_than")
+      # of course, this is reliant on, as far as I can tell, undocumented/unspecified behavior in XGBoost. So the durability isn't great, but:
+      # 1. it doesn't seem liable to change (https://github.com/dmlc/xgboost/issues/1112)
+      # 2. that lack of specification (dare I call it a bug) is the whole reason we have to do this exercise in xrf
+      rules[row_ix, 'split'] <- categorical_split_value
+    }
+  }
+  
+  rules
+}
+
+#############################################
+## functions for evaluating rulesets
+#############################################
 evaluate_rules <- function(rules, data) {
   per_rule_evaluation <- rules %>%
     group_by(rule_id) %>%
@@ -189,6 +276,9 @@ evaluate_rules_dense_only <- function(rules, data) {
   rule_features
 }
 
+#############################################
+## functions for cleaning up evaluated rules
+#############################################
 # returns the list of rules with non-zero variance
 # if, by an unexpected outcome of the tree fitting process, a rule shows no variance, remove it
 remove_no_variance_rules <- function(evaluated_rules) {
@@ -287,6 +377,11 @@ xrf.formula <- function(object, data, family,
       # TODO one simple approach would be to simply remove these feature splits from the rules
       # but that potentially dilutes the power of this method. for now, it's on the user to rectify this issue
     }
+  }
+  
+  if (sparse) {
+    feature_metadata <- build_feature_metadata(data)
+    rules <- correct_xgb_sparse_categoricals(rules, feature_metadata$feature_metadata, feature_metadata$xlev)
   }
   
   if (deoverlap){
