@@ -84,6 +84,7 @@ census_mat <- model.matrix(above_50k ~ ., census_income)
 census_train_mat <- census_mat[train_ix, ]
 census_test_mat <- census_mat[-train_ix, ]
 
+# note, as of 2019-04-17, the pre example fails to work (with an error for a new level in model.frame). as such, the below comparison is not one to one
 system.time(m_pre <- pre(above_50k ~ ., na.omit(census_train), 
                          family = 'binomial', ntrees = 100, maxdepth = 3, tree.unbiased = TRUE))
 system.time(m_xrf <- xrf(above_50k ~ ., census_train, family = 'binomial', 
@@ -97,21 +98,21 @@ auc(predict(m_glm, newx = census_test_mat, s = 'lambda.min'), census_test$above_
 auc(predict(m_xgb, newdata = census_test_mat, s = 'lambda.min'), census_test$above_50k)
 ```
 
-With results:
+With results (on a 2018 Macbook Pro, 16Gb Memory, 6 core i7, mojave):
 
 | Model | Time (s) |
 | ----- | -------- |
-| xrf   | 89       |    
-| pre   | 211      |
+| xrf   | 88       |    
+| pre   | 211*     |
 
 On the test set:
 
 | Model    |  AUC     |
 | -------- | -------- |
-| xrf      | .923     |      
-| pre      | .906     |
-| xgboost  | .924     | 
-| glmnet   | .888     |
+| xrf      | .924     |      
+| pre      | .906*    |
+| xgboost  | .926     | 
+| glmnet   | .892     |
 
 ## De-overlapping rules
 ```{r}
