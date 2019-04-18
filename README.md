@@ -11,7 +11,6 @@ RuleFit (described in [Friedman & Popescu](http://statweb.stanford.edu/~jhf/ftp/
 The general algorithm follows:
 
 * Fit a tree ensemble to the data
-    * xrf uses gradient boosting to fit the ensemble. For a description of tree boosting & gradient boosting, see [this document](https://github.com/holub008/snippets/blob/master/tree_learning/tree_learning_overview.pdf).
 * Build a set of rules as the set of root -> leaf traversals from each tree.
     * Each traversal becomes a rule via conjunction
 * Evaluate the rules on the data to build a rule feature set
@@ -21,17 +20,18 @@ The general algorithm follows:
 ### Specifics to xrf
 
 * A gradient boosted tree ensemble is used to generate rules
-* Highly correlated (Spearman) rules are removed beyond a user specified threshold
-    * This step is slow & may be optimized or removed in the future
+   * Specfically, [XGBoost](https://xgboost.readthedocs.io/en/latest/)
+   * For a general description of tree boosting & gradient boosting, see [this document](https://github.com/holub008/snippets/blob/master/tree_learning/tree_learning_overview.pdf).
 * Overlapped rules belonging to the same subspace can be de-overlapped to improve model interprettability
-    * For a description of this algorithm, see the "De-overlapping rules" section and [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf).
+    * For an illustration of de-overlapping xrf models, see the "De-overlapping rules" section below
+    * For a description of this algorithm, see [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf)
 
 ### Comparison to 'pre'
 [pre](https://cran.r-project.org/web/packages/pre/index.html) is a package on CRAN for fitting prediction rule ensembles, including RuleFit. xrf improves on some aspects of pre by:
 * Usually building more accurate models at fixed number of parameters
 * Usually building models faster
 * Building models that predict from missing data and new factor-levels
-* Providing a more limited interface for less ambiguity
+* Providing a more concise and limited interface
 
 As noted in the last point, xrf does provide less flexibility (e.g. cannot derive rules from RandomForest, or fitting trees using different algorithms) & fewer interpretive tools than pre.
 
