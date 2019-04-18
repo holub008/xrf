@@ -444,7 +444,6 @@ xrf.formula <- function(object, data, family,
 #' @export
 generate_xrf_design_matrix <- function(object, newdata,
                                        sparse = TRUE) {
-  # TODO: handle matrix
   # TODO: handle missing factor levels more elegantly (both for rule evaluation & glmnet)
   # TODO: when rules have a zero coefficient, we don't need to evaluate them
   stopifnot(is.data.frame(newdata))
