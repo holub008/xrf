@@ -23,8 +23,8 @@ The general algorithm follows:
 * A gradient boosted tree ensemble is used to generate rules
 * Highly correlated (Spearman) rules are removed beyond a user specified threshold
     * This step is slow & may be optimized or removed in the future
-* Overlapped ranges are de-overlapped to improve model interprettability (i.e. all rules )
-    * For a description of this algorithm, see [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf).
+* Overlapped rules belonging to the same subspace can be de-overlapped to improve model interprettability
+    * For a description of this algorithm, see the "De-overlapping rules" section and [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf).
 
 ### Comparison to 'pre'
 [pre](https://cran.r-project.org/web/packages/pre/index.html) is a package on CRAN for fitting prediction rule ensembles, including RuleFit. xrf improves on some aspects of pre by:
@@ -115,28 +115,90 @@ On the test set:
 | glmnet   | .892     |
 
 ## De-overlapping rules
+Overlapped rules occur when two or more rules belonging to the same subspace are not in mutual exclusion; de-overlapping guarantees that all rules belonging to the same subspace are in mutual exclusion. For example, the rules:
+
+  * age < 50 & income < 50,000
+  * age < 60 & income > 40,000
+  
+belong to the same subspace but are not in mutual exclusion (e.g. at age=45 & income=45,000). They can be de-overlapped to, for example: 
+
+  * age < 50 & income < 40,000
+  * age < 50 & income >= 40,000 & income < 50,000
+  * age < 60 & age >= 50 & income >= 40,000 & income < 50,000
+  * age < 60 & income < 60
+
+which is one of inifinte possible de-overlappings; this de-overlapping is ideal because
+  * it is small
+  * it allows all "effects" from the original 2 rules to be exactly captured (i.e. none of the boundaries are broken)
+
+The following example is somewhat contrived (in that it only uses one feature), but demonstrates how de-overlapping can prove useful in interpretting your model. To deoverlap the derived ruleset, simply specify `deoverlap=TRUE`:
+
 ```{r}
 set.seed(55455)
-census_income_limited <- census_income %>%
-  select(marital_status, capital_gain, education_num, age, capital_loss, hours_per_week, above_50k)
-experiment <- data.frame()
-for (trial_ix in 1:20) {
-  train_ix <- sample(nrow(census_income), floor(nrow(census_income) * .66))
-  census_train <- census_income_limited[train_ix, ]
-  census_test <- census_income_limited[-train_ix, ]
-
-  m_xrf_overlap <- xrf(above_50k ~ ., census_train, family = 'binomial', 
-                       xgb_control = list(nrounds = 100, max_depth = 2), deoverlap = FALSE)
-  m_xrf_deoverlap <- xrf(above_50k ~ ., census_train, family = 'binomial', 
-                         xgb_control = list(nrounds = 100, max_depth = 2), deoverlap = TRUE)
-  
-  preds_xrf_o <- predict(m_xrf_overlap, newdata=census_test)
-  preds_xrf_d <- predict(m_xrf_deoverlap, newdata=census_test)
-  trial <- list(
-    auc_overlap = auc(preds_xrf_o, census_test$above_50k),
-    auc_deoverlap = auc(preds_xrf_d, census_test$above_50k)
-  )
-  experiment <- rbind(experiment, trial, stringsAsFactors=FALSE)
-}
+m_xrf_overlap <- xrf(above_50k ~ capital_gain, census_income, family = 'binomial', 
+                     xgb_control = list(nrounds = 100, max_depth = 1), deoverlap = FALSE)
+m_xrf_deoverlap <- xrf(above_50k ~ capital_gain, census_income, family = 'binomial', 
+                       xgb_control = list(nrounds = 100, max_depth = 1), deoverlap = TRUE)
+                       
+coef_overlap <- coef(m_xrf_overlap, lambda = 'lambda.1se')
+coef_deoverlap <- coef(m_xrf_deoverlap, lambda = 'lambda.1se')
 ```
 
+Looking at the overlapped model:
+```r
+coef_overlap %>%
+ filter(coefficient_lambda.1se != 0) %>%
+ arrange(rule)
+```
+
+```
+   coefficient_lambda.1se        term               rule
+1            3.757519e+00 (Intercept)               <NA>
+2           -1.811956e+00        r0_1  capital_gain<5119
+3            3.465927e-09        r0_2 capital_gain>=5119
+4           -3.586284e+00        r1_1  capital_gain<7074
+5            4.433387e-09        r1_2 capital_gain>=7074
+6           -2.026456e+00       r10_1  capital_gain<4244
+7            1.402758e-09       r10_2 capital_gain>=4244
+8           -1.842004e+00       r11_1  capital_gain<3048
+9            1.423088e-10       r11_2 capital_gain>=3048
+10           2.758517e+00       r14_1  capital_gain<3120
+11          -1.295516e-10       r14_2 capital_gain>=3120
+12           8.893485e-01       r50_1  capital_gain<5316
+13          -1.447534e-10       r50_2 capital_gain>=5316
+14           5.068947e-01       r59_1  capital_gain<4401
+15          -4.496979e-11       r59_2 capital_gain>=4401
+16          -8.325515e-03       r86_1  capital_gain<7566
+17           1.895608e-11       r86_2 capital_gain>=7566
+```
+
+Notice that the rules are not in exclusion. To understand the impact of capital gain on income, we have to add up no less than 7 coefficients for *any* value of capital gain. Matters are made more confusing by effectively 0 coefficients on many of the '>=' rules, likely a numerical issue in the LASSO as a result of the substantial collinearity.
+
+Now for the de-overlapped model:
+```r
+coef_deoverlap %>%
+ filter(coefficient_lambda.1se != 0) %>%
+ arrange(term)
+```
+
+```
+  coefficient_lambda.1se              term                                   rule
+1              -1.007898       (Intercept)                                   <NA>
+2              -0.345907 X1_capital_gain_1                      capital_gain<3048
+3               2.366051 X1_capital_gain_2 capital_gain>=3048 & capital_gain<3120
+4              -1.520116 X1_capital_gain_3 capital_gain>=3120 & capital_gain<4244
+5               1.728206 X1_capital_gain_4 capital_gain>=4244 & capital_gain<4401
+6               2.888030 X1_capital_gain_6 capital_gain>=5119 & capital_gain<5316
+7               3.206441 X1_capital_gain_8 capital_gain>=7074 & capital_gain<7566
+8               3.927737 X1_capital_gain_9                     capital_gain>=7566
+```
+
+How slick is that! We have:
+
+  * fewer coefficients
+  * mutually exclusive coefficients
+  * numerical stability
+  
+Effects are immediately available by doing a lookup in the exclusive rules. This is a great win for interpretability.
+
+As mentioned above, this example is contrived in that it uses `depth=1` trees (i.e. conjuctions of size 1). As depth increases, interpretability can suffer regardless de-overlapping if the final ruleset is non-sparse. However, for certain problems, particularly small depth or sparse effects, de-overlapping can be a boon for interpretability.

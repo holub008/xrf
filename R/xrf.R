@@ -481,13 +481,15 @@ predict.xrf <- function(object, newdata,
 
 synthesize_conjunctions <- function(rules) {
   rules %>%
-    mutate(
-      inequality_operator = ifelse(less_than, '<', '>='),
-      expression = paste(feature, inequality_operator, format(split, scientific = FALSE, digits = 4))
-    ) %>%
-    group_by(rule_id) %>%
+    group_by(rule_id)%>%
+    arrange(feature, split) %>%
     summarize(
-      conjunction = paste(expression, collapse = ' & ')
+      conjunction =   paste0(
+        feature,
+        ifelse(less_than, '<', '>='),
+        format(split, scientific = FALSE, digits = 4),
+        collapse = ' & '
+      )
     )
 }
 
