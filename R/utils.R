@@ -25,3 +25,11 @@ add_predictors <- function(base_formula, new_predictors) {
   
   as.formula(paste0(as.character(base_formula_char), ' + ', new_part))
 }
+
+startsWith <- function(base, prefix) {
+  substr(base, 1, nchar(prefix)) == prefix
+}
+
+lstrip <- function(full, to_remove){
+  sub(sprintf("^%s", to_remove), "", full)
+}
