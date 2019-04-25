@@ -1,8 +1,13 @@
 Package: xrf
-Title: eXtreme RuleFit
-Version: 0.0.0.9000
+Title: Fit eXtreme RuleFit models
+Version: 0.1.0.9000
 Authors@R: person("Karl", "Holub", email = "karljholub@gmail.com", role = c("aut", "cre"))
-Description: Fit rule ensembles using xbgoost and glmnet
+Description: An implementation of the RuleFit algorithm. eXtreme Gradient Boosting (XGBoost) is used 
+  to build rules, and glmnet is used to fit a sparse linear model on input and rule features. 
+  Additionally, xrf provides an algorithm for hyperrectangle deoverlapping, used after rule generation
+  and before linear model fitting, to put rules sharing subspaces into mutual exclusion. 
+URL: https://github.com/holub008/xrf
+BugReports: https://github.com/holub008/xrf/issues
 Depends: R (>= 3.1.0)
 License: MIT
 Encoding: UTF-8
