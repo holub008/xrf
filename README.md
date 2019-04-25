@@ -26,14 +26,15 @@ The general algorithm follows:
     * For an illustration of de-overlapping xrf models, see the "De-overlapping rules" section below
     * For a description of this algorithm, see [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf)
 
-### Comparison to 'pre'
-[pre](https://cran.r-project.org/web/packages/pre/index.html) is a package on CRAN for fitting prediction rule ensembles, including RuleFit. xrf improves on some aspects of pre by:
+### Comparison to existing packages
+[pre](https://cran.r-project.org/web/packages/pre/index.html) is a package on CRAN for fitting prediction rule ensembles, and [rulefit](https://github.com/Zelazny7/rulefit) is another alternative on hosted on github. xrf improves on some aspects of these by:
 * Usually building more accurate models at fixed number of parameters
 * Usually building models faster
 * Building models that predict from missing data and new factor-levels
 * Providing a more concise and limited interface
+* Tested & actively maintained, fewer bugs
 
-As noted in the last point, xrf does provide less flexibility (e.g. cannot derive rules from RandomForest, or fitting trees using different algorithms) & fewer interpretive tools than pre.
+On the last point, as of April 2019, both packages fail to even build a model on the census income example below due to bugs.
 
 ## Example
 
@@ -59,6 +60,7 @@ Here we employ out-of-the-box RuleFit from pre & xrf, as well as raw xgboost & g
 ```R
 library(dplyr)
 library(pre)
+library(rulefit) # installed via devtools::install_git("https://github.com/Zelazny7/rulefit")
 library(glmnet)
 library(xgboost)
 
@@ -87,6 +89,12 @@ census_test_mat <- census_mat[-train_ix, ]
 # note, as of 2019-04-17, the pre example fails to work (with an error for a new level in model.frame). as such, the below comparison is not one to one
 system.time(m_pre <- pre(above_50k ~ ., na.omit(census_train), 
                          family = 'binomial', ntrees = 100, maxdepth = 3, tree.unbiased = TRUE))
+# note, as of 2019-04-25, this example fails by attempting to access names() of a sparse matrix (seems it should be using colnames())
+system.time({
+  m_gbm <- gbm.fit(census_train_mat, census_train$above_50k, distribution="bernoulli", interaction.depth=3, shrinkage=0.1, verbose = FALSE)
+  rf_plan <- rulefit(m_gbm, n.trees=10)
+  m_rf <- train(rf_plan, census_train_mat, y = census_train$above_50k, family="binomial")
+})
 system.time(m_xrf <- xrf(above_50k ~ ., census_train, family = 'binomial', 
              xgb_control = list(nrounds = 100, max_depth = 3)))
 m_xgb <- xgboost(census_train_mat, census_train$above_50k, max_depth = 3, nrounds = 100, objective = 'binary:logistic')
@@ -94,6 +102,7 @@ m_glm <- cv.glmnet(census_train_mat, census_train$above_50k, alpha = 1)
 
 auc(predict(m_pre, census_test), census_test$above_50k)
 auc(predict(m_xrf, census_test), census_test$above_50k)
+auc(predict(m_rf, newx = census_test), census_test$above_50k)
 auc(predict(m_glm, newx = census_test_mat, s = 'lambda.min'), census_test$above_50k)
 auc(predict(m_xgb, newdata = census_test_mat, s = 'lambda.min'), census_test$above_50k)
 ```
