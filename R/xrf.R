@@ -65,7 +65,12 @@ xrf_preconditions <- function(family, xgb_control, glm_control,
     stop('Prefit tree ensemble must be of class {', paste0(allowed_tree_ensemble_classes, collapse = ','), "}")
   }
   
-  features_with_commas <- colnames()
+  features_with_commas <- grepl(',', colnames(data), fixed = TRUE)
+  if (any(features_with_commas)) {
+    feature_names <- colnames(data)[features_with_commas]
+    stop(paste0('The following column names contain illegal characters: ', paste0("'", features_with_commas, "'", collapse = ',')))
+  }
+  
 }
 
 ## the choice of ensemble loss is currently hidden from the api to protect implementation details
