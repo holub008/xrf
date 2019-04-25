@@ -1,6 +1,7 @@
 #############################################
 ## functions for preconditions on user input
 #############################################
+
 condition_xgb_control <- function(family, xgb_control, data, response_var) {
   # this is a duplicated but necessary check
   if (!(response_var %in% colnames(data))) {
@@ -63,6 +64,8 @@ xrf_preconditions <- function(family, xgb_control, glm_control,
   if (!is.null(prefit_xgb) && length(intersect(allowed_tree_ensemble_classes, class(prefit_xgb))) == 0) {
     stop('Prefit tree ensemble must be of class {', paste0(allowed_tree_ensemble_classes, collapse = ','), "}")
   }
+  
+  features_with_commas <- colnames()
 }
 
 ## the choice of ensemble loss is currently hidden from the api to protect implementation details
@@ -147,6 +150,7 @@ extract_xgb_rules <- function(m) {
 ##################################################
 ## functions for parsing out model matrix features
 ##################################################
+
 build_feature_metadata <- function(data) {
   all_features <- data.frame(feature_name = colnames(data), 
                              stringsAsFactors = FALSE)
@@ -223,6 +227,7 @@ correct_xgb_sparse_categoricals <- function(rules, feature_metadata, xlev,
 #############################################
 ## functions for evaluating rulesets
 #############################################
+
 evaluate_rules <- function(rules, data) {
   per_rule_evaluation <- rules %>%
     group_by(rule_id) %>%
@@ -279,6 +284,7 @@ evaluate_rules_dense_only <- function(rules, data) {
 #############################################
 ## functions for cleaning up evaluated rules
 #############################################
+
 # returns the list of rules with non-zero variance
 # if, by an unexpected outcome of the tree fitting process, a rule shows no variance, remove it
 remove_no_variance_rules <- function(evaluated_rules) {
@@ -296,19 +302,17 @@ dedupe_train_rules <- function(evaluated_rules) {
     colnames()
 }
 
-#' Fit a RuleFit model
+#' Fit an eXtreme RuleFit model
 #'
 #' S3 method for building an "eXtreme RuleFit" model.
 #' See \code{\link{xrf.formula}} for preferred entry point
-#'
-#' @author kholub
 #'
 #' @export
 xrf <- function(object, ...) {
   UseMethod('xrf', object)
 }
 
-#' Fit a RuleFit model
+#' Fit an eXtreme RuleFit model
 #' 
 #' See Friedman & Popescu (2008) for a description of the general RuleFit algorithm.
 #' This method uses XGBoost to fit a tree ensemble, extracts a ruleset as the conjunction of tree 
@@ -324,12 +328,9 @@ xrf <- function(object, ...) {
 #' @param prefit_xgb an xgboost model (of class xgb.Booster) to be used instead of the model that xrf would normally fit
 #' @param deoverlap if true, the tree derived rules are deoverlapped, in that the deoverlapped rule set contains no overlapped rules
 #' 
-#' @author kholub
-#' 
 #' @importFrom xgboost xgboost
 #' @importFrom xgboost xgb.model.dt.tree
 #' @import dplyr
-#' @import fuzzyjoin
 #' @importFrom Matrix sparse.model.matrix
 #' 
 #' @references 
@@ -431,13 +432,11 @@ xrf.formula <- function(object, data, family,
             class = 'xrf')
 }
 
-#' Generate the design matrix from a RuleFit xrf model
+#' Generate the design matrix from an eXtreme RuleFit model
 #'
 #' @param object an object of class xrf
 #' @param newdata data to generate on
 #' @param sparse a logical indicating whether a sparse design matrix should be used
-#'
-#' @author yama1968
 #'
 #' @importFrom Matrix sparse.model.matrix
 #'
@@ -464,8 +463,6 @@ generate_xrf_design_matrix <- function(object, newdata,
 #' @param sparse a logical indicating whether a sparse design matrix should be used
 #' @param lambda the lasso penalty parameter to be applied
 #' @param type the type of predicted value produced
-#'
-#' @author kholub
 #' 
 #' @export
 predict.xrf <- function(object, newdata,
@@ -498,8 +495,6 @@ synthesize_conjunctions <- function(rules) {
 #' @param object an object of class xrf
 #' @param lambda the lasso penalty parameter to be applied
 #'
-#' @author kholub
-#'
 #' @export
 coef.xrf <- function(object, lambda = 'lambda.min', ...) {
   rule_conjunctions <- synthesize_conjunctions(object$rules)
@@ -521,8 +516,6 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
 #' 
 #' @param object an object of class xrf
 #' 
-#' @author kholub
-#' 
 #' @import dplyr
 #'
 #' @export
@@ -539,8 +532,6 @@ summary.xrf <- function(object, ...) {
 #' Print an eXtreme RuleFit model
 #'
 #' @param x an xrf object to be printed
-#' 
-#' @author kholub
 #'
 #' @export
 print.xrf <- function(x, ...) {
@@ -552,8 +543,6 @@ print.xrf <- function(x, ...) {
 #' Show an eXtreme RuleFit model
 #'
 #' @param x an xrf object to be shown
-#' 
-#' @author kholub
 #'
 #' @export
 show.xrf <- function(object) {

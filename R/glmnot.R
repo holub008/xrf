@@ -1,57 +1,15 @@
-# glmnot quite glmnet. also, it's glmnot a problem to use
+# glmnot quite glmnet
 # this wrapper allows training & prediction from a data.frame, and provides mechanisms for handling new levels in prediction
-# TODO does this even need to be exported?
+# for current release, this class is not exposed in public API
 
-#' Delegates a cv.glmnet
-#'
-#' @author kholub
-#'
-#'@export
 coef.glmnot <- function(object, ...) {
   coef(object$model, ...)
 }
 
-#' Delegates a cv.glmnet
-#'
-#' @author kholub
-#'
-#' @export
-print.glmnot <- function(object, ...) {
-  print(object$model, ...)
-}
-
-#' Produces regularization path plot (delegated to optimal glmnet fit)
-#'
-#' @author kholub
-#'
-#'@export
-plot.glmnot <- function(object, ...) {
-  plot(object$model$glmnet.fit, label = TRUE, ...)
-  coef_l1 <- sum(abs(coef(object)))
-  abline(v = coef_l1)
-}
-
-#' Delegates a cv.glmnet
-#'
-#' Accepts a data frame or design matrix, dependent on what the model was trained with. 
-#' If a model was trained with a data.frame, it can be predicted with either a matrix or a data.frame
-#'
-#' @param object a glmnnot object to predict from
-#' @param newdata a matrix or dataframe to draw predictions from, dependent on how the model was trained
-#' @param sparse if true and supplied data is a dataframe, the constructed design matrix is sparse
-#'
-#' @author kholub
-#' @examples
-#' dat <- data.frame(
-#'   x = c(1,2,3,4,55,6,2,3, 1,2,3),
-#'   z = as.factor(c('a','b','c','a','c','b','c', 'c', 'a', 'b', 'c')),
-#'   y = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE))
-#' test_dat <- data.frame(x = c(10,5), z = c('c', 'd'))
-#' predict(m, newdata = test_dat)
-#'
+# Accepts a data frame or design matrix for newdata, dependent on what the model was trained with. 
+# If a model was trained with a data.frame, it can be predicted with either a matrix or a data.frame
+#
 #' @importFrom Matrix sparse.model.matrix
-#'
-#'@export
 predict.glmnot <- function(object, newdata, 
                            sparse = TRUE,
                            lambda = 'lambda.min',
@@ -87,34 +45,16 @@ predict.glmnot <- function(object, newdata,
           s = lambda, type = type)
 }
 
-#' Elastic net regularized regression
-#'
-#' S3 method for elastic net fits - a wrapper on glmnet with some quality of life improvements.
-#' See \code{\link{glmnot.formula}} for preferred entry point
-#'
-#' @author kholub
-#'
-#' @export
 glmnot <- function(object, ...) {
   UseMethod('glmnot', object)
 }
 
-#' Elastic net regularization algorithm
-#'
-#' @param X a design matrix (sparse or otherwise) consisting of predictors to train on
-#' @param y a vector of responses to train on
-#' @param family family of the fitted model
-#' @param alpha the elastic net parameter
-#' @param formula the formula specify the design matrix (optional)
-#' @param xlev per feature levels (optional)
-#' @param weights weights on observations in X
-#' @param glm_control other parameters to glm
-#'
-#' @author kholub
-#'
+# X is a design matrix (sparse or otherwise) consisting of predictors to train on
+# y is a vector of responses to train on
+# alpha is the elastic net parameter
+# formula is the optional formula specify the design matrix
+#
 #' @import glmnet
-#'
-#' @export
 glmnot.default <- function(X, y, family,
                            alpha = 1,
                            formula = NULL,
@@ -132,23 +72,8 @@ glmnot.default <- function(X, y, family,
                  xlev = xlev), class = 'glmnot')
 }
 
-#' Elastic net regularization
-#'
-#' @param formula a specification of the features used to build the design matrix
-#' @param data a data frame used to build the model
-#' @param family family of the fitted model
-#' @param alpha the elastic net parameter
-#' @param formula the formula specify the design matrix (optional)
-#' @param xlev per feature levels (optional)
-#' @param weights weights on observations in X
-#' @param glm_control other parameters to glm
-#'
-#' @author kholub
-#'
 #' @importFrom Matrix sparse.model.matrix
 #' @import dplyr
-#'
-#' @export 
 glmnot.formula <- function(formula, data, family,
                            alpha = 1,
                            type.measure = 'auc',

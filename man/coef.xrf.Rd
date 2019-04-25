@@ -14,6 +14,3 @@
 \description{
 Produce rules & coefficients for the RuleFit model
 }
-\author{
-kholub
-}

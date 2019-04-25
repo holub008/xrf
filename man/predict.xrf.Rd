@@ -21,6 +21,3 @@
 \description{
 Draw predictions from a RuleFit xrf model
 }
-\author{
-kholub
-}

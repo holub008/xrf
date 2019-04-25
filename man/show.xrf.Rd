@@ -12,6 +12,3 @@ show.xrf(object)
 \description{
 Show an eXtreme RuleFit model
 }
-\author{
-kholub
-}

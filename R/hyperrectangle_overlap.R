@@ -1,8 +1,9 @@
-##############
+###########################################################
 # functions adapting xrf rulesets to generic volumes & back
-##############
+###########################################################
+
 features_to_space_identifier <- function(features) {
-  # TODO, if we choose to use this pattern, need csv escaping - on a plane and can't google :)
+  # note, this is guaranteed unique because xrf preconditions that feature names do not include `,`
   ordered_features <- sort(unique(features))
   return(paste(ordered_features, collapse=','))
 }
@@ -16,6 +17,7 @@ resolve_splits_to_bounding <- function(split, less_than) {
   list(lower_bound = lower_bound, upper_bound = upper_bound)
 }
 
+#' @import dplyr
 build_volumes_from_xrf_rules <- function(rules) {
   # turn all rules into bounds. for singly split dimensions, this means adding the appropriate Inf bound
   # for dimensions split many times, shrink to smallest bound (since a rule is a conjunction)
@@ -67,9 +69,9 @@ build_xrf_rules_from_volumes <- function(volumes) {
   )
 }
 
-##################
-# generic deoverlapping algo
-##################
+###########################################################
+# generic deoverlapping algo using input volumes
+###########################################################
 
 build_fully_partitioned_space <- function(volumes) {
   volumes %>% 
@@ -139,7 +141,8 @@ generate_volumes_from_partitioned_space <- function(partitioned_space, id_starte
   return(expanded_volumes)
 }
 
-prune_uncovering_volumes <- function(new_volumes, original_volumes) {
+#' @import fuzzyjoin
+prune_noncovering_volumes <- function(new_volumes, original_volumes) {
   # we left join because not all new volumes belong to all old volumes
   # the range join prescribes that the original volumes contains the new volume
   original_to_new_volumes <- fuzzy_left_join(original_volumes, new_volumes,
@@ -277,7 +280,7 @@ fuse_abutted_hyperrectangles <- function(volumes, original_volumes) {
 deoverlap_hyperrectangles <- function(volumes) {
   partitioned_space <- build_fully_partitioned_space(volumes)
   new_volumes <- generate_volumes_from_partitioned_space(partitioned_space)
-  solution <- prune_uncovering_volumes(new_volumes, volumes)
+  solution <- prune_noncovering_volumes(new_volumes, volumes)
   fuse_abutted_hyperrectangles(solution, volumes)
 }
 

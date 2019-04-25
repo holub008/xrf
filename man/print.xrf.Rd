@@ -12,6 +12,3 @@
 \description{
 Print an eXtreme RuleFit model
 }
-\author{
-kholub
-}

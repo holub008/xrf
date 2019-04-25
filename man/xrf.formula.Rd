@@ -2,7 +2,7 @@
 % Please edit documentation in R/xrf.R
 \name{xrf.formula}
 \alias{xrf.formula}
-\title{Fit a RuleFit model}
+\title{Fit an eXtreme RuleFit model}
 \usage{
 \method{xrf}{formula}(object, data, family, xgb_control = list(nrounds =
   100, max_depth = 3), glm_control = list(type.measure = "deviance",
@@ -40,7 +40,4 @@ m <- xrf(Petal.Length ~ ., iris,
 \references{
 Friedman, J. H., & Popescu, B. E. (2008). Predictive learning via rule 
 ensembles. \emph{The Annals of Applied Statistics, 2}(3), 916-954.
-}
-\author{
-kholub
 }

@@ -2,14 +2,11 @@
 % Please edit documentation in R/xrf.R
 \name{xrf}
 \alias{xrf}
-\title{Fit a RuleFit model}
+\title{Fit an eXtreme RuleFit model}
 \usage{
 xrf(object, ...)
 }
 \description{
 S3 method for building an "eXtreme RuleFit" model.
 See \code{\link{xrf.formula}} for preferred entry point
-}
-\author{
-kholub
 }

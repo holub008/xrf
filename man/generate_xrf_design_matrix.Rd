@@ -2,7 +2,7 @@
 % Please edit documentation in R/xrf.R
 \name{generate_xrf_design_matrix}
 \alias{generate_xrf_design_matrix}
-\title{Generate the design matrix from a RuleFit xrf model}
+\title{Generate the design matrix from an eXtreme RuleFit model}
 \usage{
 generate_xrf_design_matrix(object, newdata, sparse = TRUE)
 }
@@ -14,8 +14,5 @@ generate_xrf_design_matrix(object, newdata, sparse = TRUE)
 \item{sparse}{a logical indicating whether a sparse design matrix should be used}
 }
 \description{
-Generate the design matrix from a RuleFit xrf model
-}
-\author{
-yama1968
+Generate the design matrix from an eXtreme RuleFit model
 }

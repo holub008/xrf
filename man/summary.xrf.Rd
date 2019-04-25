@@ -12,6 +12,3 @@
 \description{
 Summarize an eXtreme RuleFit model
 }
-\author{
-kholub
-}
