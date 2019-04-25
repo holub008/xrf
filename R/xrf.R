@@ -372,7 +372,8 @@ xrf.formula <- function(object, data, family,
                      label = data[[response_var]],
                      nrounds = xgb_control$nrounds,
                      objective = get_xgboost_objective(family),
-                     params = xgb_control)
+                     params = xgb_control,
+                     verbose = 0)
     rules <- extract_xgb_rules(m_xgb)
   }
   else {
