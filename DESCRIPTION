@@ -19,3 +19,5 @@ Imports:
     xgboost (>= 0.71.2),
     dplyr,
     fuzzyjoin
+Suggests: 
+    testthat
