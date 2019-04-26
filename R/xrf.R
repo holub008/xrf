@@ -392,7 +392,8 @@ xrf.formula <- function(object, data, family,
   }
   
   if (deoverlap){
-    rules <- xrf_deoverlap_rules(rules)
+    rules <- xrf_deoverlap_rules(rules) %>%
+      select(rule_id, feature, split, less_than)
   }
 
   rule_features <- if (sparse) evaluate_rules(rules, design_matrix) else evaluate_rules_dense_only(rules, design_matrix)

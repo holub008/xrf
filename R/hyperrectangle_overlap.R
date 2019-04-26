@@ -47,6 +47,7 @@ build_volumes_from_xrf_rules <- function(rules) {
     select(dimension, volume_id, min, max, space_id)
 }
 
+# xrf uses single splits as opposed to [min, max] intervals, so convert intervals to splits
 build_xrf_rules_from_volumes <- function(volumes) {
   rbind(
     volumes %>%
@@ -124,7 +125,7 @@ generate_volumes_from_partitioned_space <- function(partitioned_space, id_starte
     else {
       # case this is after the first dimension - create a new volume for each subspace volume with the new bounds added (cartesian product)
       new_dimension_bounds <- lapply(unique(subspace_volumes$volume_id), function(volume_id) {
-        list(volume_id = paste0(volume_id, '_', dimension_of_interest, '_', bound_ix), # TODO this form of creating an ID could get costly in higher dimensions
+        list(volume_id = paste0(volume_id, '_', dimension_of_interest, '_', bound_ix), # TODO this scheme may not produce unique ids for carefully constructed feature names
              min = lower_bound, 
              max = upper_bound,
              dimension = dimension_of_interest)
