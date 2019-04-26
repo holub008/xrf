@@ -8,6 +8,8 @@
 }
 \arguments{
 \item{x}{an xrf object to be printed}
+
+\item{...}{ignored arguments}
 }
 \description{
 Print an eXtreme RuleFit model

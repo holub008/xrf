@@ -313,6 +313,9 @@ dedupe_train_rules <- function(evaluated_rules) {
 #'
 #' S3 method for building an "eXtreme RuleFit" model.
 #' See \code{\link{xrf.formula}} for preferred entry point
+#' 
+#' @param object an object describing the model to be fit
+#' @param ... additional arguments
 #'
 #' @export
 xrf <- function(object, ...) {
@@ -334,6 +337,7 @@ xrf <- function(object, ...) {
 #' @param sparse whether a sparse design matrix should be used
 #' @param prefit_xgb an xgboost model (of class xgb.Booster) to be used instead of the model that xrf would normally fit
 #' @param deoverlap if true, the tree derived rules are deoverlapped, in that the deoverlapped rule set contains no overlapped rules
+#' @param ... ignored arguments 
 #' 
 #' @importFrom xgboost xgboost
 #' @importFrom xgboost xgb.model.dt.tree
@@ -356,7 +360,8 @@ xrf.formula <- function(object, data, family,
                                            nfolds = 5),
                         sparse = TRUE,
                         prefit_xgb = NULL,
-                        deoverlap = FALSE) {
+                        deoverlap = FALSE,
+                        ...) {
   expanded_formula <- expand_formula(object, data)
   response_var <- get_response(expanded_formula)
   
@@ -443,8 +448,9 @@ xrf.formula <- function(object, data, family,
 #' Generate the design matrix from an eXtreme RuleFit model
 #'
 #' @param object an object of class xrf
-#' @param newdata data to generate on
+#' @param data data to generate design matrix from
 #' @param sparse a logical indicating whether a sparse design matrix should be used
+#' @param ... ignored arguments
 #'
 #' @importFrom Matrix sparse.model.matrix
 #'
@@ -470,12 +476,14 @@ model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
 #' @param sparse a logical indicating whether a sparse design matrix should be used
 #' @param lambda the lasso penalty parameter to be applied
 #' @param type the type of predicted value produced
+#' @param ... ignored arguments
 #' 
 #' @export
 predict.xrf <- function(object, newdata,
                         sparse = TRUE,
                         lambda = 'lambda.min',
-                        type = 'response') {
+                        type = 'response',
+                        ...) {
   stopifnot(is.data.frame(newdata))
   full_data <- model.matrix(object, newdata, sparse)
 
@@ -501,6 +509,7 @@ synthesize_conjunctions <- function(rules) {
 #'
 #' @param object an object of class xrf
 #' @param lambda the lasso penalty parameter to be applied
+#' @param ... ignored arguments
 #'
 #' @export
 coef.xrf <- function(object, lambda = 'lambda.min', ...) {
@@ -522,6 +531,7 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
 #' Summarize an eXtreme RuleFit model
 #' 
 #' @param object an object of class xrf
+#' @param ... ignored arguments
 #' 
 #' @import dplyr
 #'
@@ -539,6 +549,7 @@ summary.xrf <- function(object, ...) {
 #' Print an eXtreme RuleFit model
 #'
 #' @param x an xrf object to be printed
+#' @param ... ignored arguments
 #'
 #' @export
 print.xrf <- function(x, ...) {

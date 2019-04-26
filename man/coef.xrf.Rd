@@ -10,6 +10,8 @@
 \item{object}{an object of class xrf}
 
 \item{lambda}{the lasso penalty parameter to be applied}
+
+\item{...}{ignored arguments}
 }
 \description{
 Produce rules & coefficients for the RuleFit model

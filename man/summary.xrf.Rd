@@ -8,6 +8,8 @@
 }
 \arguments{
 \item{object}{an object of class xrf}
+
+\item{...}{ignored arguments}
 }
 \description{
 Summarize an eXtreme RuleFit model

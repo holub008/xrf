@@ -9,9 +9,11 @@
 \arguments{
 \item{object}{an object of class xrf}
 
+\item{data}{data to generate design matrix from}
+
 \item{sparse}{a logical indicating whether a sparse design matrix should be used}
 
-\item{newdata}{data to generate on}
+\item{...}{ignored arguments}
 }
 \description{
 Generate the design matrix from an eXtreme RuleFit model

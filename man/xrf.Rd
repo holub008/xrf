@@ -6,6 +6,11 @@
 \usage{
 xrf(object, ...)
 }
+\arguments{
+\item{object}{an object describing the model to be fit}
+
+\item{...}{additional arguments}
+}
 \description{
 S3 method for building an "eXtreme RuleFit" model.
 See \code{\link{xrf.formula}} for preferred entry point

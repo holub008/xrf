@@ -5,7 +5,7 @@
 \title{Draw predictions from a RuleFit xrf model}
 \usage{
 \method{predict}{xrf}(object, newdata, sparse = TRUE,
-  lambda = "lambda.min", type = "response")
+  lambda = "lambda.min", type = "response", ...)
 }
 \arguments{
 \item{object}{an object of class xrf}
@@ -17,6 +17,8 @@
 \item{lambda}{the lasso penalty parameter to be applied}
 
 \item{type}{the type of predicted value produced}
+
+\item{...}{ignored arguments}
 }
 \description{
 Draw predictions from a RuleFit xrf model
