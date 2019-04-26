@@ -451,9 +451,9 @@ model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
   stopifnot(is.data.frame(newdata))
   design_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
   
-  raw_design_matrix <- design_matrix_method(object$base_formula, newdata)
+  raw_design_matrix <- design_matrix_method(object$base_formula, data)
   rules_features <- if (sparse) evaluate_rules(object$rules, raw_design_matrix) else evaluate_rules_dense_only(object$rules, raw_design_matrix)
-  full_data <- cbind(newdata, rules_features, 
+  full_data <- cbind(data, rules_features, 
                      stringsAsFactors = FALSE)
 
   full_data
