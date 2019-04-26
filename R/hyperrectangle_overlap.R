@@ -22,48 +22,48 @@ build_volumes_from_xrf_rules <- function(rules) {
   # turn all rules into bounds. for singly split dimensions, this means adding the appropriate Inf bound
   # for dimensions split many times, shrink to smallest bound (since a rule is a conjunction)
   rules_as_bounds <- rules %>%
-    group_by(rule_id, feature) %>%
+    group_by(.data$rule_id, .data$feature) %>%
     summarize(
-      lower_bound = resolve_splits_to_bounding(split, less_than)$lower_bound,
-      upper_bound = resolve_splits_to_bounding(split, less_than)$upper_bound
+      lower_bound = resolve_splits_to_bounding(.data$split, .data$less_than)$lower_bound,
+      upper_bound = resolve_splits_to_bounding(.data$split, .data$less_than)$upper_bound
     )
     
   # create a logical grouping of volumes that occupy the same space (i.e. could feasbily be overlapped)
   space_assigned_volumes <- rules_as_bounds %>%
-    group_by(rule_id) %>%
+    group_by(.data$rule_id) %>%
     mutate(
-      space_id = features_to_space_identifier(feature)
+      space_id = features_to_space_identifier(.data$feature)
     ) %>%
     ungroup()
   
   # rename columns for generic algo to solve
   space_assigned_volumes %>%
     mutate(
-      dimension = feature,
-      volume_id = rule_id,
-      min = lower_bound,
-      max = upper_bound
+      dimension = .data$feature,
+      volume_id = .data$rule_id,
+      min = .data$lower_bound,
+      max = .data$upper_bound
     ) %>%
-    select(dimension, volume_id, min, max, space_id)
+    select(.data$dimension, .data$volume_id, .data$min, .data$max, .data$space_id)
 }
 
 # xrf uses single splits as opposed to [min, max] intervals, so convert intervals to splits
 build_xrf_rules_from_volumes <- function(volumes) {
   rbind(
     volumes %>%
-      filter(is.finite(min)) %>%
+      filter(is.finite(.data$min)) %>%
       mutate(
-        rule_id = make.names(volume_id),
-        feature = dimension,
-        split = min,
+        rule_id = make.names(.data$volume_id),
+        feature = .data$dimension,
+        split = .data$min,
         less_than = FALSE
       ),
     volumes %>%
-      filter(is.finite(max)) %>%
+      filter(is.finite(.data$max)) %>%
       mutate(
-        rule_id = make.names(volume_id),
-        feature = dimension,
-        split = max,
+        rule_id = make.names(.data$volume_id),
+        feature = .data$dimension,
+        split = .data$max,
         less_than = TRUE
       ),
     stringsAsFactors = FALSE
@@ -76,12 +76,12 @@ build_xrf_rules_from_volumes <- function(volumes) {
 
 build_fully_partitioned_space <- function(volumes) {
   volumes %>% 
-    mutate(bound = min) %>%
-    select(dimension, bound) %>%
+    mutate(bound = .data$min) %>%
+    select(.data$dimension, .data$bound) %>%
     rbind(
       volumes %>% 
-        mutate(bound = max) %>%
-        select(dimension, bound),
+        mutate(bound = .data$max) %>%
+        select(.data$dimension, .data$bound),
       stringsAsFactors = FALSE
     )
 }
@@ -94,16 +94,16 @@ generate_volumes_from_partitioned_space <- function(partitioned_space, id_starte
   # pick an arbtirary first dimension
   dimension_of_interest <- partitioned_space$dimension[1]
   dimension_bounds <- partitioned_space %>% 
-    filter(dimension == dimension_of_interest) %>%
+    filter(.data$dimension == dimension_of_interest) %>%
     # this is a small optimization - equal bounds are redundant
     distinct() %>%
-    arrange(bound)
+    arrange(.data$bound)
   
   # there should always be 2 or more, since each bound corresponds to hyperrectangle edge
   stopifnot(nrow(dimension_bounds) > 1)
   
   # subspace meaning everything outside the dimension of interest
-  partitioned_subspace <- partitioned_space %>% filter(dimension != dimension_of_interest)
+  partitioned_subspace <- partitioned_space %>% filter(.data$dimension != dimension_of_interest)
   # recursively build ranges from the subspace before tacking on ranges for the dimension of interest in this stack frame
   subspace_volumes <- generate_volumes_from_partitioned_space(partitioned_subspace, id_starter = id_starter)
   
@@ -131,7 +131,7 @@ generate_volumes_from_partitioned_space <- function(partitioned_space, id_starte
              dimension = dimension_of_interest)
       }) %>% bind_rows() %>%
         rbind(subspace_volumes %>%
-                mutate(volume_id = paste0(volume_id, '_', dimension_of_interest, '_', bound_ix)),
+                mutate(volume_id = paste0(.data$volume_id, '_', dimension_of_interest, '_', bound_ix)),
               stringsAsFactors= FALSE)
     }
     
@@ -152,23 +152,23 @@ prune_noncovering_volumes <- function(new_volumes, original_volumes) {
                                                     'dimension' = 'dimension'),
                                              match_fun = c(`<=`, `>=`, `==`)) %>%
     # renaming some things in a reasonable way
-    mutate(dimension = dimension.x) %>%
-    select(-dimension.x, -dimension.y)
+    mutate(dimension = .data$dimension.x) %>%
+    select(-.data$dimension.x, -.data$dimension.y)
   
   covering_volumes <- data.frame()
   for (new_volume_id_to_check in unique(new_volumes$volume_id)) {
     volume <- new_volumes %>%
-      filter(volume_id == new_volume_id_to_check)
+      filter(.data$volume_id == new_volume_id_to_check)
     
     in_covering_space <- FALSE
     for (original_volume_id_to_check in unique(original_volumes$volume_id)) {
       original_volume_to_check <- original_to_new_volumes %>%
-        filter(volume_id.x == original_volume_id_to_check)
+        filter(.data$volume_id.x == original_volume_id_to_check)
       # here we make sure all dimensions are contained
       volume_dimensions_contained <- original_to_new_volumes %>%
-        filter(volume_id.x == original_volume_id_to_check & 
-                 volume_id.y == new_volume_id_to_check) %>%
-        pull(dimension) %>% 
+        filter(.data$volume_id.x == original_volume_id_to_check & 
+                 .data$volume_id.y == new_volume_id_to_check) %>%
+        pull(.data$dimension) %>% 
         setequal(original_volume_to_check$dimension)
       
       if (volume_dimensions_contained) {
@@ -202,11 +202,11 @@ fuse_abutted_hyperrectangles <- function(volumes, original_volumes) {
       inner_join(fused_volumes, by = c('dimension' = 'dimension',
                                        'max' = 'min'),
                  suffix = c('.left', '.right')) %>%
-      filter(volume_id.left != volume_id.right) %>%  # this should only happen if a range is of size 0
+      filter(.data$volume_id.left != .data$volume_id.right) %>%  # this should only happen if a range is of size 0
       mutate(
-        max = max.right # since the left max (where the abuttment happens on the right min) must be less than the right max
+        max = .data$max.right # since the left max (where the abuttment happens on the right min) must be less than the right max
       ) %>%
-      distinct(dimension, volume_id.left, volume_id.right, min, max) 
+      distinct(.data$dimension, .data$volume_id.left, .data$volume_id.right, .data$min, .data$max) 
     
     # note this is a one to many maping, since the originals are overlapped
     current_volumes_to_original <- fused_volumes %>%
@@ -214,22 +214,22 @@ fuse_abutted_hyperrectangles <- function(volumes, original_volumes) {
                                                 'max' = 'max',
                                                 'dimension' = 'dimension'),
                        match_fun = c(`>=`, `<=`, `==`)) %>%
-      group_by(volume_id.x, volume_id.y) %>%
-      filter(n_distinct(dimension.x) == dimensionality) %>%
+      group_by(.data$volume_id.x, .data$volume_id.y) %>%
+      filter(n_distinct(.data$dimension.x) == dimensionality) %>%
       summarize(
-        volume_id = volume_id.x[1],
-        original_volume_id = volume_id.y[1]
+        volume_id = .data$volume_id.x[1],
+        original_volume_id = .data$volume_id.y[1]
       ) %>%
       ungroup() %>%
-      select(volume_id, original_volume_id)
+      select(.data$volume_id, .data$original_volume_id)
     
     for (candidate_fuse_ix in seq_len(nrow(candidate_fuses))) {
       candidate_fuse <- candidate_fuses[candidate_fuse_ix, ]
       # subvolume because we ignore the dimension of the fuse
       subvolume_left <- fused_volumes %>%
-        filter(volume_id == candidate_fuse$volume_id.left & dimension != candidate_fuse$dimension)
+        filter(.data$volume_id == candidate_fuse$volume_id.left & .data$dimension != candidate_fuse$dimension)
       subvolume_right <- fused_volumes %>%
-        filter(volume_id == candidate_fuse$volume_id.right & dimension != candidate_fuse$dimension)
+        filter(.data$volume_id == candidate_fuse$volume_id.right & .data$dimension != candidate_fuse$dimension)
       
       # this case implies the volume has already been joined
       # meaning the candidate fuse may not be valid any longer - catch it next iteration
@@ -246,10 +246,10 @@ fuse_abutted_hyperrectangles <- function(volumes, original_volumes) {
                                            'max' = 'max'))
       
       original_volume_counts <- current_volumes_to_original %>%
-        filter(volume_id %in% c(candidate_fuse$volume_id.left, candidate_fuse$volume_id.right)) %>%
-        group_by(original_volume_id) %>%
+        filter(.data$volume_id %in% c(candidate_fuse$volume_id.left, candidate_fuse$volume_id.right)) %>%
+        group_by(.data$original_volume_id) %>%
         count() %>%
-        pull(n)
+        pull(.data$n)
       
       if (nrow(dimension_matches) == dimensionality - 1 &&
           all(original_volume_counts == 2)) { #
@@ -257,8 +257,8 @@ fuse_abutted_hyperrectangles <- function(volumes, original_volumes) {
         
         # add in the new volume
         fused_volume <- rbind(
-          dimension_matches %>% select(min, max, dimension),
-          candidate_fuse %>% select(min, max, dimension),
+          dimension_matches %>% select(.data$min, .data$max, .data$dimension),
+          candidate_fuse %>% select(.data$min,.data$max, .data$dimension),
           stringsAsFactors = FALSE)
         fused_volume$volume_id <- paste0(candidate_fuse$volume_id.left, '_', 
                                          candidate_fuse$volume_id.right, '_', 
@@ -270,7 +270,7 @@ fuse_abutted_hyperrectangles <- function(volumes, original_volumes) {
         
         # clean up the old volumes
         fused_volumes <- fused_volumes %>%
-          filter(volume_id != candidate_fuse$volume_id.left & volume_id != candidate_fuse$volume_id.right)
+          filter(.data$volume_id != candidate_fuse$volume_id.left & .data$volume_id != candidate_fuse$volume_id.right)
       }
     }
   }
@@ -290,8 +290,8 @@ xrf_deoverlap_rules <- function(rules) {
   deoverlapped_volumes <- data.frame()
   for (deoverlap_space_id in unique(volumes$space_id)) {
     volumes_in_space <- volumes %>% 
-      filter(deoverlap_space_id == space_id) %>%
-      select(-space_id)
+      filter(deoverlap_space_id == .data$space_id) %>%
+      select(-.data$space_id)
     deoverlapped_volumes <- rbind(deoverlapped_volumes, 
                                   deoverlap_hyperrectangles(volumes_in_space),
                                   stringsAsFactors = FALSE)
