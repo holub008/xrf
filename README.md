@@ -22,9 +22,9 @@ The general algorithm follows:
 ### Specifics to xrf
 
 * A gradient boosted tree ensemble is used to generate rules
-   * Specfically, [XGBoost](https://xgboost.readthedocs.io/en/latest/)
+   * Specifically, [XGBoost](https://xgboost.readthedocs.io/en/latest/)
    * For a general description of tree boosting & gradient boosting, see [this document](https://github.com/holub008/snippets/blob/master/tree_learning/tree_learning_overview.pdf).
-* Overlapped rules belonging to the same subspace can be de-overlapped to improve model interprettability
+* Overlapped rules belonging to the same subspace can be de-overlapped to improve model interpretability
     * For an illustration of de-overlapping xrf models, see the "De-overlapping rules" section below
     * For a description of this algorithm, see [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf)
 
@@ -137,11 +137,11 @@ belong to the same subspace but are not in mutual exclusion (e.g. at age=45 & in
   * age < 60 & age >= 50 & income >= 40,000 & income < 50,000
   * age < 60 & income < 60
 
-which is one of inifinte possible de-overlappings; this de-overlapping is ideal because
+which is one of infinite possible de-overlappings; this de-overlapping is ideal because
   * it is small
   * it allows all "effects" from the original 2 rules to be exactly captured (i.e. none of the boundaries are broken)
 
-The following example is somewhat contrived (in that it only uses one feature), but demonstrates how de-overlapping can prove useful in interpretting your model. To deoverlap the derived ruleset, simply specify `deoverlap=TRUE`:
+The following example is somewhat contrived (in that it only uses one feature), but demonstrates how de-overlapping can prove useful in interpreting your model. To de-overlap the derived ruleset, simply specify `deoverlap=TRUE`:
 
 ```{r}
 set.seed(55455)
@@ -211,4 +211,4 @@ How slick is that! We have:
   
 Effects are immediately available by doing a lookup in the exclusive rules. This is a great win for interpretability.
 
-As mentioned above, this example is contrived in that it uses `depth=1` trees (i.e. conjuctions of size 1). As depth increases, interpretability can suffer regardless de-overlapping if the final ruleset is non-sparse. However, for certain problems, particularly small depth or sparse effects, de-overlapping can be a boon for interpretability.
+As mentioned above, this example is contrived in that it uses `depth=1` trees (i.e. conjunctions of size 1). As depth increases, interpretability can suffer regardless de-overlapping if the final ruleset is non-sparse. However, for certain problems, particularly small depth or sparse effects, de-overlapping can be a boon for interpretability.
