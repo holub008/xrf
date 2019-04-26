@@ -214,6 +214,10 @@ correct_xgb_sparse_categoricals <- function(rules, feature_metadata, xlev,
       # e.g. feature "ora" with level "nge" and another feature "oran" with level "ge". or even a continuous with name "orange"
       stop(paste0('In attempting to parse sparse design matrix columns, several feature/level matches found for: "', feature_level, '". Conservatively failing to user to change feature/level names or use dense matrices.'))
     }
+    else if (nrow(feature_level_matches) == 0) {
+      # the feature couldn't be found. this is usually because a transformation was applied via the formula
+      stop(paste0('In attempting to parse sparse design matrix columns, no feature/level matches found for: "', feature_level, '". This is often caused by supplying a transformation in the input formula. User may either transform source data and use main effects only formula or set argument sparse=FALSE.'))
+    }
     
     if (!feature_level_matches$is_continuous) {
       # xgb always makes the split value negative, so that "Missing" (= 0 one-hot) really maps to "Yes" (the left, less than split)
@@ -322,7 +326,7 @@ xrf <- function(object, ...) {
 #' traversals, and fits a sparse linear model to the resulting feature set
 #' (including the original feature set) using glmnet.
 #' 
-#' @param object a formula prescribing features to use in the model. transformation of the response variable is not supported
+#' @param object a formula prescribing features to use in the model. transformation of the response variable is not supported. when using transformations on the input features (not suggested in general) it is suggested to set sparse=F
 #' @param data a data frame with columns corresponding to the formula
 #' @param family the family of the fitted model. one of 'gaussian', 'binomial', 'multinomial'
 #' @param xgb_control a list of parameters for xgboost. must supply an nrounds argument

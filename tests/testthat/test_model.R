@@ -43,7 +43,7 @@ test_that('model from dense design matrix has expected fields', {
 test_that('model from sparse design matrix has expected fields', {
   depth <- 2
   trees <- 3
-  m_xrf <- xrf(am ~ mpg + as.factor(cyl) + disp, dataset, family = 'binomial',
+  m_xrf <- xrf(am ~ mpg + cyl + disp, dataset, family = 'binomial',
                xgb_control = list(nrounds = 3, max_depth = 2))
   
   test_expected_fields(m_xrf, depth, trees)

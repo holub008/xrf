@@ -9,7 +9,7 @@
   nfolds = 5), sparse = TRUE, prefit_xgb = NULL, deoverlap = FALSE)
 }
 \arguments{
-\item{object}{a formula prescribing features to use in the model. transformation of the response variable is not supported}
+\item{object}{a formula prescribing features to use in the model. transformation of the response variable is not supported. when using transformations on the input features (not suggested in general) it is suggested to set sparse=F}
 
 \item{data}{a data frame with columns corresponding to the formula}
 
