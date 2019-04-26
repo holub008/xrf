@@ -51,7 +51,7 @@ test_that('model from sparse design matrix has expected fields', {
 
 test_that('model predicts binary outcome', {
   m_xrf <- xrf(am ~ mpg + cyl + disp + hp + drat + wt + qsec, dataset, family = 'binomial',
-               xgb_control = list(nrounds = trees, max_depth = depth), 
+               xgb_control = list(nrounds = 3, max_depth = 2), 
                glm_control = list(type.measure='deviance', nfolds=10))
   preds_response_dense <- predict(m_xrf, dataset, type = 'response', sparse = FALSE)
   preds_response_sparse <- predict(m_xrf, dataset, type = 'response', sparse = TRUE)
@@ -69,7 +69,7 @@ test_that('model predicts binary outcome', {
 
 test_that('model predicts continuous outcome', {
   m_xrf <- xrf(mpg ~ ., dataset, family = 'gaussian',
-               xgb_control = list(nrounds = trees, max_depth = depth), 
+               xgb_control = list(nrounds = 3, max_depth = 2), 
                glm_control = list(type.measure='deviance', nfolds=10))
   
   preds <- predict(m_xrf, dataset, type = 'response', sparse = FALSE)
