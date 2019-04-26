@@ -1,5 +1,7 @@
 # eXtreme RuleFit
 
+[![Travis build status](https://travis-ci.org/holub008/xrf.svg?branch=master)](https://travis-ci.org/holub008/xrf)
+
 ## Install
 ```R
 devtools::install_git('https://github.com/holub008/xrf')
