@@ -102,7 +102,6 @@ m_glm <- cv.glmnet(census_train_mat, census_train$above_50k, alpha = 1)
 
 auc(predict(m_pre, census_test), census_test$above_50k)
 auc(predict(m_xrf, census_test), census_test$above_50k)
-auc(predict(m_rf, newx = census_test), census_test$above_50k)
 auc(predict(m_glm, newx = census_test_mat, s = 'lambda.min'), census_test$above_50k)
 auc(predict(m_xgb, newdata = census_test_mat, s = 'lambda.min'), census_test$above_50k)
 ```
