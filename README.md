@@ -29,7 +29,7 @@ The general algorithm follows:
     * For a description of this algorithm, see [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf)
 
 ### Comparison to existing packages
-[pre](https://cran.r-project.org/web/packages/pre/index.html) is a package on CRAN for fitting prediction rule ensembles, and [rulefit](https://github.com/Zelazny7/rulefit) is another alternative on hosted on github. xrf improves on some aspects of these by:
+[pre](https://CRAN.R-project.org/package=pre) is a package on CRAN for fitting prediction rule ensembles, and [rulefit](https://github.com/Zelazny7/rulefit) is another alternative on hosted on github. xrf improves on some aspects of these by:
 * Usually building more accurate models at fixed number of parameters
 * Usually building models faster
 * Building models that predict from missing data and new factor-levels
