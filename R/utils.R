@@ -1,5 +1,8 @@
-# this is a breakable implementation, for instance in the case of a missing response (e.g. ~ a + b)
 get_response <- function(formula) {
+  # this code may execute before xrf_preconditions, so the exception originates here
+  if (length(formula) != 3) {
+    stop('Supplied formula does not appear to follow expected form of response ~ predictors')
+  }
   all.vars(formula[[2]])
 }
 

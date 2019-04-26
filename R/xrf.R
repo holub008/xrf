@@ -239,12 +239,10 @@ evaluate_rules <- function(rules, data) {
     do (
       rule_evaluation = sapply(1:nrow(.), function(split_ix) {
         split <- .[split_ix, ]
-        # todo this could be a straight up failure, or at least we could de-dupe the warnings
         feature_ix <- which(split$feature == colnames(data))
         if (length(feature_ix) == 0) {
-          warning(paste0('Feature ', split$feature, 
-                         ' from ruleset is not present in the input data to be evaluated'))
-          return(rep(FALSE, nrow(data)))
+          stop(paste0('Feature "', split$feature, 
+                         '" from ruleset is not present in the input data to be evaluated'))
         }
         else if (length(feature_ix) > 1) {
           stop(paste0('Unexpectedly found two columns with the same name in input data (user must resolve): ', 
@@ -324,7 +322,7 @@ xrf <- function(object, ...) {
 #' traversals, and fits a sparse linear model to the resulting feature set
 #' (including the original feature set) using glmnet.
 #' 
-#' @param object a formula prescribing features to use in the model
+#' @param object a formula prescribing features to use in the model. transformation of the response variable is not supported
 #' @param data a data frame with columns corresponding to the formula
 #' @param family the family of the fitted model. one of 'gaussian', 'binomial', 'multinomial'
 #' @param xgb_control a list of parameters for xgboost. must supply an nrounds argument
@@ -356,7 +354,6 @@ xrf.formula <- function(object, data, family,
                         prefit_xgb = NULL,
                         deoverlap = FALSE) {
   expanded_formula <- expand_formula(object, data)
-  # todo this breaks for naughty formulas
   response_var <- get_response(expanded_formula)
   
   xgboost_conditioned <- condition_xgb_control(family, xgb_control, data, response_var)
@@ -381,7 +378,7 @@ xrf.formula <- function(object, data, family,
     rules <- extract_xgb_rules(m_xgb)
     if (length(setdiff(rules$feature, colnames(design_matrix))) > 0) {
       stop('prefit_xgb contains features (or factor-levels) not present in the input training data. This is currently not supported.')
-      # TODO one simple approach would be to simply remove these feature splits from the rules
+      # one simple approach would be to simply remove these feature splits from the rules
       # but that potentially dilutes the power of this method. for now, it's on the user to rectify this issue
     }
   }
@@ -448,10 +445,9 @@ xrf.formula <- function(object, data, family,
 #' @importFrom Matrix sparse.model.matrix
 #'
 #' @export
-generate_xrf_design_matrix <- function(object, newdata,
-                                       sparse = TRUE) {
+model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
   # TODO: handle missing factor levels more elegantly (both for rule evaluation & glmnet)
-  # TODO: when rules have a zero coefficient, we don't need to evaluate them
+  # TODO: when rules have a zero coefficient and we just want to predict, we don't need to evaluate them
   stopifnot(is.data.frame(newdata))
   design_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
   
@@ -477,7 +473,7 @@ predict.xrf <- function(object, newdata,
                         lambda = 'lambda.min',
                         type = 'response') {
   stopifnot(is.data.frame(newdata))
-  full_data <- generate_xrf_design_matrix(object, newdata, sparse)
+  full_data <- model.matrix(object, newdata, sparse)
 
   predict(object$glm, newdata = full_data, 
           sparse = sparse, lambda = lambda, type = type)
@@ -544,14 +540,5 @@ summary.xrf <- function(object, ...) {
 print.xrf <- function(x, ...) {
   cat(paste0('An eXtreme RuleFit model of ', n_distinct(x$rules$rule_id), ' rules.'))
   cat(paste0('\n\nFormula:\n\n'))
-  show(x$base_formula)
+  cat(paste(x$base_formula[2], x$base_formula[3],sep=' ~ '))
 }  
-
-#' Show an eXtreme RuleFit model
-#'
-#' @param x an xrf object to be shown
-#'
-#' @export
-show.xrf <- function(object) {
-  print(object)
-}
