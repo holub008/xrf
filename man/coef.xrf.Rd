@@ -7,12 +7,19 @@
 \method{coef}{xrf}(object, lambda = "lambda.min", ...)
 }
 \arguments{
-\item{object}{an object of class xrf}
+\item{object}{an object of class "xrf"}
 
-\item{lambda}{the lasso penalty parameter to be applied}
+\item{lambda}{the lasso penalty parameter to be applied as in 'glmnet'}
 
 \item{...}{ignored arguments}
 }
 \description{
 Produce rules & coefficients for the RuleFit model
+}
+\examples{
+m <- xrf(Petal.Length ~ ., iris, 
+         xgb_control = list(nrounds = 20, max_depth = 2),
+         family = 'gaussian')
+linear_model_coefficients <- coef(m, lambda = 'lambda.1se')
+
 }

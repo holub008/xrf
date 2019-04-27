@@ -7,10 +7,17 @@
 \method{print}{xrf}(x, ...)
 }
 \arguments{
-\item{x}{an xrf object to be printed}
+\item{x}{an object of class "xrf"}
 
 \item{...}{ignored arguments}
 }
 \description{
 Print an eXtreme RuleFit model
+}
+\examples{
+m <- xrf(Petal.Length ~ ., iris, 
+         xgb_control = list(nrounds = 20, max_depth = 2),
+         family = 'gaussian')
+print(m)
+
 }

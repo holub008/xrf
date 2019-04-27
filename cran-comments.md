@@ -1,8 +1,10 @@
 ## Resubmission
-This is a resubmission based on prior comments. Changes are:
+This is a second resubmission based on review comments. Changes are:
 
-* Removed full text MIT license in favor of the CRAN template
-* Added a reference to the original 2008 paper in Description
+* All software references in Description are single quoted
+* All exported functions include an example
+
+Unrelated to the review, the changeset also includes a non-API impacting bug fix in rule evalation.
 
 ## Test environments
 

@@ -8,7 +8,7 @@
   lambda = "lambda.min", type = "response", ...)
 }
 \arguments{
-\item{object}{an object of class xrf}
+\item{object}{an object of class "xrf"}
 
 \item{newdata}{data to predict on}
 
@@ -22,4 +22,11 @@
 }
 \description{
 Draw predictions from a RuleFit xrf model
+}
+\examples{
+m <- xrf(Petal.Length ~ ., iris, 
+         xgb_control = list(nrounds = 20, max_depth = 2),
+         family = 'gaussian')
+predictions <- predict(m, iris)
+
 }

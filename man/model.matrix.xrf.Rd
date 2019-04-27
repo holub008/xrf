@@ -7,7 +7,7 @@
 \method{model.matrix}{xrf}(object, data, sparse = TRUE, ...)
 }
 \arguments{
-\item{object}{an object of class xrf}
+\item{object}{an object of class "xrf"}
 
 \item{data}{data to generate design matrix from}
 
@@ -17,4 +17,11 @@
 }
 \description{
 Generate the design matrix from an eXtreme RuleFit model
+}
+\examples{
+m <- xrf(Petal.Length ~ ., iris, 
+         xgb_control = list(nrounds = 20, max_depth = 2),
+         family = 'gaussian')
+design <- model.matrix(m, iris, sparse = FALSE)
+
 }

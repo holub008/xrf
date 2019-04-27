@@ -4,14 +4,15 @@ context('model sanity checks')
 
 data('mtcars')
 dataset <- mtcars %>%
+  rbind(mtcars) %>% # double the dataset to avoid small class priors for glmnet cross validation
   mutate(
     vs = as.factor(vs),
     am = as.factor(am)
   )
 
 test_expected_fields <- function(model, depth, trees) {
-  max_splits <- (2 ^ depth - 1) * trees
-  max_rules <- 2 ^ (depth - 1) * trees # max root -> leaf traversals in a binary tree for each tree
+  max_splits <- (2 ^ (depth + 1) - 2) * trees # number of edges in a binary tree for each tree = number of nodes - 1
+  max_rules <- 2 ^ depth * trees # number of root -> leaf traversals in a binary tree for each tree
   
   expected_max_coef <- 1 + # intercept
     1 + # continuous mpg

@@ -22,7 +22,7 @@
 
 \item{sparse}{whether a sparse design matrix should be used}
 
-\item{prefit_xgb}{an xgboost model (of class xgb.Booster) to be used instead of the model that xrf would normally fit}
+\item{prefit_xgb}{an xgboost model (of class xgb.Booster) to be used instead of the model that \code{xrf} would normally fit}
 
 \item{deoverlap}{if true, the tree derived rules are deoverlapped, in that the deoverlapped rule set contains no overlapped rules}
 

@@ -7,10 +7,17 @@
 \method{summary}{xrf}(object, ...)
 }
 \arguments{
-\item{object}{an object of class xrf}
+\item{object}{an object of class "xrf"}
 
 \item{...}{ignored arguments}
 }
 \description{
 Summarize an eXtreme RuleFit model
+}
+\examples{
+m <- xrf(Petal.Length ~ ., iris, 
+         xgb_control = list(nrounds = 20, max_depth = 2),
+         family = 'gaussian')
+summary(m)
+
 }

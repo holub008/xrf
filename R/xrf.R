@@ -51,6 +51,15 @@ xrf_preconditions <- function(family, xgb_control, glm_control,
     stop(paste0('Response variable "', response_var, '" not present in supplied data'))
   }
   
+  if (any(is.na(data[[response_var]]))) {
+    stop('Response variable contains missing values which is not allowed')
+  }
+  
+  if (n_distinct(data[[response_var]]) <= 1) {
+    # TODO cv.glmnet will still warn/fail when there is a very small number of observations per class for logistic regression
+    stop('Response variable shows no variation, model cannot be fit')
+  }
+  
   if (family == 'multinomial' && 
       (is.null(xgb_control$num_class) || n_distinct(data[[response_var]]) != xgb_control$num_class)) {
     stop('Must supply a num_class list element in xgb_control when using multinomial objective')
@@ -316,7 +325,12 @@ dedupe_train_rules <- function(evaluated_rules) {
 #' 
 #' @param object an object describing the model to be fit
 #' @param ... additional arguments
-#'
+#' 
+#' @examples 
+#' m <- xrf(Petal.Length ~ ., iris, 
+#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          family = 'gaussian')
+#'          
 #' @export
 xrf <- function(object, ...) {
   UseMethod('xrf', object)
@@ -335,7 +349,7 @@ xrf <- function(object, ...) {
 #' @param xgb_control a list of parameters for xgboost. must supply an nrounds argument
 #' @param glm_control a list of parameters for the glmnet fit. must supply a type.measure and nfolds arguments (for the lambda cv)
 #' @param sparse whether a sparse design matrix should be used
-#' @param prefit_xgb an xgboost model (of class xgb.Booster) to be used instead of the model that xrf would normally fit
+#' @param prefit_xgb an xgboost model (of class xgb.Booster) to be used instead of the model that \code{xrf} would normally fit
 #' @param deoverlap if true, the tree derived rules are deoverlapped, in that the deoverlapped rule set contains no overlapped rules
 #' @param ... ignored arguments 
 #' 
@@ -455,12 +469,18 @@ xrf.formula <- function(object, data, family,
 
 #' Generate the design matrix from an eXtreme RuleFit model
 #'
-#' @param object an object of class xrf
+#' @param object an object of class "xrf"
 #' @param data data to generate design matrix from
 #' @param sparse a logical indicating whether a sparse design matrix should be used
 #' @param ... ignored arguments
 #'
 #' @importFrom Matrix sparse.model.matrix
+#' 
+#' @examples 
+#' m <- xrf(Petal.Length ~ ., iris, 
+#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          family = 'gaussian')
+#' design <- model.matrix(m, iris, sparse = FALSE)
 #'
 #' @export
 model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
@@ -479,12 +499,18 @@ model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
 
 #' Draw predictions from a RuleFit xrf model
 #'
-#' @param object an object of class xrf
+#' @param object an object of class "xrf"
 #' @param newdata data to predict on
 #' @param sparse a logical indicating whether a sparse design matrix should be used
 #' @param lambda the lasso penalty parameter to be applied
 #' @param type the type of predicted value produced
 #' @param ... ignored arguments
+#'
+#' @examples
+#' m <- xrf(Petal.Length ~ ., iris, 
+#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          family = 'gaussian')
+#' predictions <- predict(m, iris)
 #' 
 #' @export
 predict.xrf <- function(object, newdata,
@@ -515,9 +541,15 @@ synthesize_conjunctions <- function(rules) {
 
 #' Produce rules & coefficients for the RuleFit model
 #'
-#' @param object an object of class xrf
-#' @param lambda the lasso penalty parameter to be applied
+#' @param object an object of class "xrf"
+#' @param lambda the lasso penalty parameter to be applied as in 'glmnet'
 #' @param ... ignored arguments
+#' 
+#' @examples
+#' m <- xrf(Petal.Length ~ ., iris, 
+#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          family = 'gaussian')
+#' linear_model_coefficients <- coef(m, lambda = 'lambda.1se')
 #'
 #' @export
 coef.xrf <- function(object, lambda = 'lambda.min', ...) {
@@ -538,11 +570,17 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
 
 #' Summarize an eXtreme RuleFit model
 #' 
-#' @param object an object of class xrf
+#' @param object an object of class "xrf"
 #' @param ... ignored arguments
 #' 
 #' @import dplyr
 #' @importFrom methods show
+#' 
+#' @examples
+#' m <- xrf(Petal.Length ~ ., iris, 
+#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          family = 'gaussian')
+#' summary(m)
 #'
 #' @export
 summary.xrf <- function(object, ...) {
@@ -557,8 +595,14 @@ summary.xrf <- function(object, ...) {
 
 #' Print an eXtreme RuleFit model
 #'
-#' @param x an xrf object to be printed
+#' @param x an object of class "xrf"
 #' @param ... ignored arguments
+#' 
+#' @examples 
+#' m <- xrf(Petal.Length ~ ., iris, 
+#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          family = 'gaussian')
+#' print(m)
 #'
 #' @export
 print.xrf <- function(x, ...) {
