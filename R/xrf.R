@@ -274,7 +274,7 @@ evaluate_rules_dense_only <- function(rules, data) {
       # yes, this is fast
       rule_evaluation = eval(parse(text=paste0(
         paste0('`', .data$feature, '`'),
-        ifelse(.data$less_than, '<', '>='),
+        ifelse(.data$less_than, ' < ', ' >= '),
         .data$split,
         collapse = ' & '
       )), 
