@@ -2,8 +2,8 @@ Package: xrf
 Title: eXtreme RuleFit
 Version: 0.1.0
 Authors@R: person("Karl", "Holub", email = "karljholub@gmail.com", role = c("aut", "cre"))
-Description: An implementation of the RuleFit algorithm as described in Friedman & Popescu (2008; 
-    <doi:10.1214/07-AOAS148>). eXtreme Gradient Boosting ('XGBoost') is used 
+Description: An implementation of the RuleFit algorithm as described in Friedman & Popescu 
+  (2008) <doi:10.1214/07-AOAS148>. eXtreme Gradient Boosting ('XGBoost') is used 
   to build rules, and 'glmnet' is used to fit a sparse linear model on the raw and rule features. The end result
   is a model that learns similarly to a tree ensemble, while often offering improved interpretability
   and achieving improved scoring runtime in live applications. xrf provides several algorithms for

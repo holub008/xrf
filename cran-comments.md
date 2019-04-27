@@ -1,3 +1,9 @@
+## Resubmission
+This is a resubmission based on prior comments. Changes are:
+
+* Removed full text MIT license in favor of the CRAN template
+* Added a reference to the original 2008 paper in Description
+
 ## Test environments
 
 * macOS Mojave, R 3.5.3
