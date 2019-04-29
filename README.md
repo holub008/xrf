@@ -3,6 +3,14 @@
 [![Travis build status](https://travis-ci.org/holub008/xrf.svg?branch=master)](https://travis-ci.org/holub008/xrf)
 
 ## Install
+For current CRAN release:
+
+```R
+install.packages('xrf')
+```
+
+For the current development version:
+
 ```R
 devtools::install_git('https://github.com/holub008/xrf')
 ```
@@ -112,7 +120,7 @@ With results (on a 2018 Macbook Pro, 16Gb Memory, 6 core i7, mojave):
 
 | Model | Time (s) |
 | ----- | -------- |
-| xrf   | 88       |    
+| xrf   | 73       |    
 | pre   | 211*     |
 
 On the test set:
