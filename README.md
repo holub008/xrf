@@ -1,5 +1,7 @@
 # eXtreme RuleFit
 
+![PTCAS Rulefit](/docs/images/ptcas_rulefit.png)
+
 [![Travis build status](https://travis-ci.org/holub008/xrf.svg?branch=master)](https://travis-ci.org/holub008/xrf)
 [![xrf on CRAN](https://cranlogs.r-pkg.org/badges/xrf)](https://CRAN.R-project.org/package=xrf)
 
@@ -137,7 +139,7 @@ On the test set:
 | --------- | -------- |
 | xrf       | .924     |      
 | pre       | .906*    |
-| horserule | .893     |
+| horserule | .892     |
 | xgboost   | .926     | 
 | glmnet    | .892     |
 
