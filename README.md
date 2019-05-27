@@ -1,6 +1,6 @@
 # eXtreme RuleFit
 
-![PTCAS Rulefit](/docs/images/ptcas_rulefit.png)
+![PTCAS Rulefit](/docs/images/ptcas_rulefit.jpg)
 
 [![Travis build status](https://travis-ci.org/holub008/xrf.svg?branch=master)](https://travis-ci.org/holub008/xrf)
 [![xrf on CRAN](https://cranlogs.r-pkg.org/badges/xrf)](https://CRAN.R-project.org/package=xrf)
