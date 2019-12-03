@@ -94,3 +94,15 @@ test_that('model predicts without outcome column', {
   expect_equal(predict(mod_nsp, mtcars[1:5, ],   sparse = FALSE)[, 1],
                predict(mod_nsp, mtcars[1:5, -1], sparse = FALSE)[, 1])
 })
+
+test_that('call scrubbed', {
+  mod_nsp <- xrf(mpg ~ ., data = mtcars[-(1:5), ],
+                 xgb_control = list(nrounds = 5, max_depth = 2),
+                 family = "gaussian", sparse = FALSE)
+
+  # in previous version:
+  # > object.size(mod_nsp$glm$model$call)
+  # 211544 bytes
+  expect_true(object.size(mod_nsp$glm$model$call) < 211544)
+})
+
