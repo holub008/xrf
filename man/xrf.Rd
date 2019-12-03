@@ -16,8 +16,8 @@ S3 method for building an "eXtreme RuleFit" model.
 See \code{\link{xrf.formula}} for preferred entry point
 }
 \examples{
-m <- xrf(Petal.Length ~ ., iris, 
+m <- xrf(Petal.Length ~ ., iris,
          xgb_control = list(nrounds = 20, max_depth = 2),
          family = 'gaussian')
-         
+
 }

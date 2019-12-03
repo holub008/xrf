@@ -17,7 +17,7 @@
 Produce rules & coefficients for the RuleFit model
 }
 \examples{
-m <- xrf(Petal.Length ~ ., iris, 
+m <- xrf(Petal.Length ~ ., iris,
          xgb_control = list(nrounds = 20, max_depth = 2),
          family = 'gaussian')
 linear_model_coefficients <- coef(m, lambda = 'lambda.1se')
