@@ -333,7 +333,7 @@ dedupe_train_rules <- function(evaluated_rules) {
 #'
 #' @export
 xrf <- function(object, ...) {
-  UseMethod('xrf')
+  UseMethod('xrf', object)
 }
 
 #' Fit an eXtreme RuleFit model
