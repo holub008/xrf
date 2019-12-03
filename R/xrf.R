@@ -487,9 +487,13 @@ model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
   # TODO: handle missing factor levels more elegantly (both for rule evaluation & glmnet)
   # TODO: when rules have a zero coefficient and we just want to predict, we don't need to evaluate them
   stopifnot(is.data.frame(data))
+
+  trms <- terms(object$base_formula)
+  trms <- delete.response(trms)
+
   design_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
 
-  raw_design_matrix <- design_matrix_method(object$base_formula, data)
+  raw_design_matrix <- design_matrix_method(trms, data)
   rules_features <- if (sparse) evaluate_rules(object$rules, raw_design_matrix) else evaluate_rules_dense_only(object$rules, raw_design_matrix)
   full_data <- cbind(data, rules_features,
                      stringsAsFactors = FALSE)
