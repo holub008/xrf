@@ -4,10 +4,17 @@
 \alias{xrf.formula}
 \title{Fit an eXtreme RuleFit model}
 \usage{
-\method{xrf}{formula}(object, data, family, xgb_control = list(nrounds =
-  100, max_depth = 3), glm_control = list(type.measure = "deviance",
-  nfolds = 5), sparse = TRUE, prefit_xgb = NULL, deoverlap = FALSE,
-  ...)
+\method{xrf}{formula}(
+  object,
+  data,
+  family,
+  xgb_control = list(nrounds = 100, max_depth = 3),
+  glm_control = list(type.measure = "deviance", nfolds = 5),
+  sparse = TRUE,
+  prefit_xgb = NULL,
+  deoverlap = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{a formula prescribing features to use in the model. transformation of the response variable is not supported. when using transformations on the input features (not suggested in general) it is suggested to set sparse=F}
@@ -30,17 +37,17 @@
 }
 \description{
 See Friedman & Popescu (2008) for a description of the general RuleFit algorithm.
-This method uses XGBoost to fit a tree ensemble, extracts a ruleset as the conjunction of tree 
+This method uses XGBoost to fit a tree ensemble, extracts a ruleset as the conjunction of tree
 traversals, and fits a sparse linear model to the resulting feature set
 (including the original feature set) using glmnet.
 }
 \examples{
-m <- xrf(Petal.Length ~ ., iris, 
+m <- xrf(Petal.Length ~ ., iris,
          xgb_control = list(nrounds = 20, max_depth = 2),
          family = 'gaussian')
 
 }
 \references{
-Friedman, J. H., & Popescu, B. E. (2008). Predictive learning via rule 
+Friedman, J. H., & Popescu, B. E. (2008). Predictive learning via rule
 ensembles. \emph{The Annals of Applied Statistics, 2}(3), 916-954.
 }

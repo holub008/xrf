@@ -4,8 +4,14 @@
 \alias{predict.xrf}
 \title{Draw predictions from a RuleFit xrf model}
 \usage{
-\method{predict}{xrf}(object, newdata, sparse = TRUE,
-  lambda = "lambda.min", type = "response", ...)
+\method{predict}{xrf}(
+  object,
+  newdata,
+  sparse = TRUE,
+  lambda = "lambda.min",
+  type = "response",
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class "xrf"}
@@ -24,7 +30,7 @@
 Draw predictions from a RuleFit xrf model
 }
 \examples{
-m <- xrf(Petal.Length ~ ., iris, 
+m <- xrf(Petal.Length ~ ., iris,
          xgb_control = list(nrounds = 20, max_depth = 2),
          family = 'gaussian')
 predictions <- predict(m, iris)

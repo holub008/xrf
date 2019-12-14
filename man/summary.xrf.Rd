@@ -15,7 +15,7 @@
 Summarize an eXtreme RuleFit model
 }
 \examples{
-m <- xrf(Petal.Length ~ ., iris, 
+m <- xrf(Petal.Length ~ ., iris,
          xgb_control = list(nrounds = 20, max_depth = 2),
          family = 'gaussian')
 summary(m)

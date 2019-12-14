@@ -6,11 +6,11 @@ coef.glmnot <- function(object, ...) {
   coef(object$model, ...)
 }
 
-# Accepts a data frame or design matrix for newdata, dependent on what the model was trained with. 
+# Accepts a data frame or design matrix for newdata, dependent on what the model was trained with.
 # If a model was trained with a data.frame, it can be predicted with either a matrix or a data.frame
 #
 #' @importFrom Matrix sparse.model.matrix
-predict.glmnot <- function(object, newdata, 
+predict.glmnot <- function(object, newdata,
                            sparse = TRUE,
                            lambda = 'lambda.min',
                            type = 'response') {
@@ -21,27 +21,27 @@ predict.glmnot <- function(object, newdata,
       stop('Cannot predict from a dataframe using a glmnot object which was trained on a matrix - train using a data frame, or predict from a matrix of the same form')
     }
     design_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
-    
+
     no_response_formula <- delete.response(terms(object$formula))
-    
+
     # handle the case of new levels in newdata not in original data xlev
     for (column in all.vars(no_response_formula)) {
       column_data <- newdata[[column]]
       if(!is.numeric(column_data)) {
         # to avoid factor / character confusion, coerce everything to character and take the performance penalty
         column_data <- as.character(column_data)
-        
+
         reference_level <- object$xlev[[column]][1]
         newdata[[column]] <- ifelse(column_data %in% object$xlev[[column]],
                                     column_data, reference_level)
       }
     }
-    
+
     newdata <- design_matrix_method(no_response_formula, newdata,
                                     xlev = object$xlev) # this case for when newdata is missing levels in the original dataframe
   }
-  
-  predict(object$model, newx = newdata, 
+
+  predict(object$model, newx = newdata,
           s = lambda, type = type)
 }
 
@@ -66,7 +66,12 @@ glmnot.default <- function(X, y, family,
   cv.glmnet.args <- append(cv.glmnet.args, glm_control)
 
   m <- do.call(cv.glmnet, cv.glmnet.args)
-  
+
+  # repair call by removing data
+  m$call[["x"]] <- quote(x)
+  m$call[["y"]] <- quote(y)
+  m$call[[1]]   <- quote(glmnet)
+
   structure(list(model = m,
                  formula = formula,
                  xlev = xlev), class = 'glmnot')
@@ -91,11 +96,11 @@ glmnot.formula <- function(formula, data, family,
         }
       })
   )
-  
+
   # terms() produces a formula object which represents the expanded formula (i.e. if a '.' is included)
   final_formula <- terms(formula, data = data)
   constant_factors_in_formula <- intersect(constant_factors, all.vars(final_formula))
-  
+
   terms_matrix <- attr(final_formula, "factors")
   for (column in colnames(terms_matrix)) {
     # todo technically need to check if sum == order of term
@@ -103,12 +108,12 @@ glmnot.formula <- function(formula, data, family,
       final_formula <- update(final_formula, paste('. ~ . -', column))
     }
   }
-  
+
   # ensure there are at least two terms left
   stopifnot(length(all.vars(final_formula)) > 1)
   response_variable <- get_response(final_formula)
   columns <- get_predictors(final_formula)
-  
+
   factor_column_indicator <- sapply(columns, function(column) {
     !is.numeric(data[[column]]) && column != response_variable
   })
@@ -117,15 +122,15 @@ glmnot.formula <- function(formula, data, family,
     # respect original ordering of levels if factor, otherwise arbitrary ordering
     if(is.factor(x)) levels(x) else as.character(unique(x))
   })
-  
+
   model_mat_method <- if (sparse) sparse.model.matrix else model.matrix
   X <- model_mat_method(final_formula, data, xlev = xlev)
   y <- data[[response_variable]]
-  
+
   stopifnot(nrow(X) == length(y)) # this can be expected to occur when there are NA cases present in the original data (model.matrix will drop such rows)
-  
-  glmnot(X, y, family, 
-         alpha = alpha, 
+
+  glmnot(X, y, family,
+         alpha = alpha,
          formula = final_formula,
          xlev = xlev,
          glm_control = glm_control)
