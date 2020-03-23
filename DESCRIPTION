@@ -15,10 +15,10 @@ Depends: R (>= 3.1.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.0.1.9000
+RoxygenNote: 7.0.2
 Imports: 
     Matrix,
-    glmnet,
+    glmnet (>= 3.0-2),
     xgboost (>= 0.71.2),
     dplyr,
     fuzzyjoin,

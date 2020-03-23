@@ -52,7 +52,7 @@ glmnot <- function(object, ...) {
 # X is a design matrix (sparse or otherwise) consisting of predictors to train on
 # y is a vector of responses to train on
 # alpha is the elastic net parameter
-# formula is the optional formula specify the design matrix
+# formula is the optional formula specifying the design matrix
 #
 #' @import glmnet
 glmnot.default <- function(X, y, family,
