@@ -4,3 +4,5 @@
 ^CONTRIBUTING\.md$
 ^cran-comments\.md$
 ^docs$
+^codecov\.yml$
+^\.github$

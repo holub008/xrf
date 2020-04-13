@@ -1,7 +1,8 @@
 # eXtreme RuleFit
 <img src="/docs/images/ptcas_rulefit.jpg" width="400px"/>
 
-[![Travis build status](https://travis-ci.org/holub008/xrf.svg?branch=master)](https://travis-ci.org/holub008/xrf)
+[![R build status](https://github.com/holub008/xrf/workflows/R-CMD-check/badge.svg)](https://github.com/holub008/xrf/actions)
+[![Codecov test coverage](https://codecov.io/gh/holub008/xrf/branch/master/graph/badge.svg)](https://codecov.io/gh/holub008/xrf?branch=master)
 [![xrf on CRAN](https://cranlogs.r-pkg.org/badges/xrf)](https://CRAN.R-project.org/package=xrf)
 
 ## Install

@@ -25,4 +25,5 @@ Imports:
     rlang,
     methods
 Suggests: 
-    testthat
+    testthat,
+    covr
