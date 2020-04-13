@@ -15,7 +15,7 @@ Depends: R (>= 3.1.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0.9000
 Imports: 
     Matrix,
     glmnet (>= 3.0),
