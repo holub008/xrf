@@ -18,7 +18,7 @@ install.packages('xrf')
 For the current development version:
 
 ```R
-devtools::install_git('https://github.com/holub008/xrf')
+devtools::install_dev('xrf')
 ```
 
 ## About
