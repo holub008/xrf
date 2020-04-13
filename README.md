@@ -1,9 +1,12 @@
-# eXtreme RuleFit
-<img src="/docs/images/ptcas_rulefit.jpg" width="400px"/>
+
+# xrf
 
 [![R build status](https://github.com/holub008/xrf/workflows/R-CMD-check/badge.svg)](https://github.com/holub008/xrf/actions)
 [![Codecov test coverage](https://codecov.io/gh/holub008/xrf/branch/master/graph/badge.svg)](https://codecov.io/gh/holub008/xrf?branch=master)
 [![xrf on CRAN](https://cranlogs.r-pkg.org/badges/xrf)](https://CRAN.R-project.org/package=xrf)
+
+<img src="man/images/ptcas_rulefit.jpg" width="400px"/>
+
 
 ## Install
 For current CRAN release:
@@ -233,3 +236,4 @@ How slick is that! We have:
 Effects are immediately available by doing a lookup in the exclusive rules. This is a great win for interpretability.
 
 As mentioned above, this example is contrived in that it uses `depth=1` trees (i.e. conjunctions of size 1). As depth increases, interpretability can suffer regardless de-overlapping if the final ruleset is non-sparse. However, for certain problems, particularly small depth or sparse effects, de-overlapping can be a boon for interpretability.
+
