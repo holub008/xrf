@@ -589,8 +589,8 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
 #' @export
 summary.xrf <- function(object, ...) {
   cat(paste0('An eXtreme RuleFit model of ', n_distinct(object$rules$rule_id), ' rules.'))
-  cat(paste0('\n\nFormula:\n\n'))
-  show(object$base_formula)
+  cat(paste0('\n\nOriginal Formula:\n\n'))
+  cat(smaller_formula(object$base_formula))
   cat('\n\nTree model:\n\n')
   show(summary(object$xgb))
   cat('\n\nGLM:\n\n')
@@ -611,6 +611,15 @@ summary.xrf <- function(object, ...) {
 #' @export
 print.xrf <- function(x, ...) {
   cat(paste0('An eXtreme RuleFit model of ', n_distinct(x$rules$rule_id), ' rules.'))
-  cat(paste0('\n\nFormula:\n\n'))
-  cat(paste(x$base_formula[2], x$base_formula[3],sep=' ~ '))
+  cat(paste0('\n\nOriginal Formula:\n\n'))
+  cat(smaller_formula(x$base_formula), "\n")
 }
+
+smaller_formula <- function(x, ...) {
+  chr_form <- deparse(x, width.cutoff = getOption("width") - 12)
+  if (length(chr_form) > 1) {
+    chr_form <- paste0(chr_form[1], "[truncated]")
+  }
+  chr_form
+}
+
