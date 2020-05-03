@@ -1,20 +1,16 @@
 ## Resubmission
-This is a second resubmission based on review comments. Changes are:
+This is an update of `xrf` from 0.1.2 to 0.2.0. Notable changes:
 
-* All software references in Description are single quoted
-* All exported functions include an example
-
-Unrelated to the review, the changeset also includes a non-API impacting bug fix in rule evalation.
+* shrunk the size of model objects by stripping call data
+* improved printing for large model formulas
+* `dplyr` 1.0 compatibility updates
 
 ## Test environments
 
-* macOS Mojave, R 3.5.3
-* ubuntu 14.04, R 3.5.3
-* win-builder (devel and release)
+* macOS Mojave, R 4.0.0
+* Ubuntu Linux, R-release (https://builder.r-hub.io/status/xrf_0.2.0.tar.gz-fb376c63f80b4c1eb1b3847d7b5efb90)
+* Fedora Linux, R-devel (https://builder.r-hub.io/status/xrf_0.2.0.tar.gz-81cae60013dc4fa8a1d21902a6d34b10)
+* Windows, R-devel (via win-builder)
 
 ## R CMD check results
 There were no ERRORs or WARNINGs on all platforms.
-There was one NOTE for a new submission.
-
-## Other
-Thanks!

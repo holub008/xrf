@@ -1,6 +1,6 @@
 Package: xrf
 Title: eXtreme RuleFit
-Version: 0.1.4
+Version: 0.2.0
 Authors@R: person("Karl", "Holub", email = "karljholub@gmail.com", role = c("aut", "cre"))
 Description: An implementation of the RuleFit algorithm as described in Friedman & Popescu 
   (2008) <doi:10.1214/07-AOAS148>. eXtreme Gradient Boosting ('XGBoost') is used 
@@ -15,7 +15,7 @@ Depends: R (>= 3.1.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Imports: 
     Matrix,
     glmnet (>= 3.0),
