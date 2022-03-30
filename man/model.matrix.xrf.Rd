@@ -20,7 +20,7 @@ Generate the design matrix from an eXtreme RuleFit model
 }
 \examples{
 m <- xrf(Petal.Length ~ ., iris,
-         xgb_control = list(nrounds = 20, max_depth = 2),
+         xgb_control = list(nrounds = 2, max_depth = 2),
          family = 'gaussian')
 design <- model.matrix(m, iris, sparse = FALSE)
 

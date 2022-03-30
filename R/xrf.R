@@ -328,7 +328,7 @@ dedupe_train_rules <- function(evaluated_rules) {
 #'
 #' @examples
 #' m <- xrf(Petal.Length ~ ., iris,
-#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          xgb_control = list(nrounds = 2, max_depth = 2),
 #'          family = 'gaussian')
 #'
 #' @export
@@ -372,7 +372,7 @@ xrf <- function(object, ...) {
 #'
 #' @examples
 #' m <- xrf(Petal.Length ~ ., iris,
-#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          xgb_control = list(nrounds = 2, max_depth = 2),
 #'          family = 'gaussian')
 #'
 #' @export
@@ -482,7 +482,7 @@ xrf.formula <- function(object, data, family,
 #'
 #' @examples
 #' m <- xrf(Petal.Length ~ ., iris,
-#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          xgb_control = list(nrounds = 2, max_depth = 2),
 #'          family = 'gaussian')
 #' design <- model.matrix(m, iris, sparse = FALSE)
 #'
@@ -516,7 +516,7 @@ model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
 #'
 #' @examples
 #' m <- xrf(Petal.Length ~ ., iris,
-#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          xgb_control = list(nrounds = 2, max_depth = 2),
 #'          family = 'gaussian')
 #' predictions <- predict(m, iris)
 #'
@@ -555,7 +555,7 @@ synthesize_conjunctions <- function(rules) {
 #'
 #' @examples
 #' m <- xrf(Petal.Length ~ ., iris,
-#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          xgb_control = list(nrounds = 2, max_depth = 2),
 #'          family = 'gaussian')
 #' linear_model_coefficients <- coef(m, lambda = 'lambda.1se')
 #'
@@ -586,7 +586,7 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
 #'
 #' @examples
 #' m <- xrf(Petal.Length ~ ., iris,
-#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          xgb_control = list(nrounds = 2, max_depth = 2),
 #'          family = 'gaussian')
 #' summary(m)
 #'
@@ -608,7 +608,7 @@ summary.xrf <- function(object, ...) {
 #'
 #' @examples
 #' m <- xrf(Petal.Length ~ ., iris,
-#'          xgb_control = list(nrounds = 20, max_depth = 2),
+#'          xgb_control = list(nrounds = 2, max_depth = 2),
 #'          family = 'gaussian')
 #' print(m)
 #'

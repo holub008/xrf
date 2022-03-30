@@ -1,7 +1,7 @@
 # xrf
 
 [![R build status](https://github.com/holub008/xrf/workflows/R-CMD-check/badge.svg)](https://github.com/holub008/xrf/actions)
-[![Codecov test coverage](https://codecov.io/gh/holub008/xrf/branch/master/graph/badge.svg)](https://codecov.io/gh/holub008/xrf?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/holub008/xrf/branch/master/graph/badge.svg)]( https://app.codecov.io/gh/holub008/xrf?branch=master)
 [![xrf on CRAN](https://cranlogs.r-pkg.org/badges/xrf)](https://CRAN.R-project.org/package=xrf)
 
 ## Install
@@ -39,7 +39,7 @@ The general algorithm follows:
     * For a description of this algorithm, see [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf)
 
 ### Comparison to alternatives
-Several implementations of RuleFit are available for R: [pre](https://CRAN.R-project.org/package=pre), [horserule](https://CRAN.R-project.org/package=horserule), and [rulefit](https://github.com/Zelazny7/rulefit). xrf improves on some aspects of these by:
+Several implementations of RuleFit are available for R: [pre](https://CRAN.R-project.org/package=pre), [horserule](https://CRAN.R-project.org/package=horserule), and [rulefit](https://github.com/gravesee/rulefit). xrf improves on some aspects of these by:
 * Usually building more accurate models at fixed number of parameters
 * Usually building models faster
 * Building models that predict for new factor-levels
