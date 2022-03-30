@@ -86,7 +86,7 @@ xrf_preconditions <- function(family, xgb_control, glm_control,
 ## this may be exposed to the user in the future
 get_xgboost_objective <- function(family) {
   if (family == 'gaussian') {
-    return('reg:linear')
+    return('reg:squarederror')
   }
   else if (family == 'binomial') {
     return('binary:logistic')
@@ -395,13 +395,17 @@ xrf.formula <- function(object, data, family,
   model_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
   design_matrix <- model_matrix_method(expanded_formula, data)
 
+  nrounds <- xgb_control$nrounds
+  # necessary to remove from params to avoid false positive warnings
+  xgb_control <- within(xgb_control, rm(nrounds))
+
   if (is.null(prefit_xgb)) {
     m_xgb <- xgboost(data = design_matrix,
-                     label = data[[response_var]],
-                     nrounds = xgb_control$nrounds,
-                     objective = get_xgboost_objective(family),
-                     params = xgb_control,
-                     verbose = 0)
+                   label = data[[response_var]],
+                   nrounds = nrounds,
+                   objective = get_xgboost_objective(family),
+                   params = xgb_control,
+                   verbose = 0)
     rules <- extract_xgb_rules(m_xgb)
   }
   else {
