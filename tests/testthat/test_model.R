@@ -106,3 +106,15 @@ test_that('call scrubbed', {
   expect_true(object.size(mod_nsp$glm$model$call) < 211544)
 })
 
+
+test_that('single feature model', {
+  set.seed(55414)
+  x1 <- rbinom(100, 1, .7)
+  y <- rnorm(100, 0, .5) + x1
+  dat <- data.frame(y, x1)
+  mod <- xrf(y ~ x1, data = dat,
+                 xgb_control = list(nrounds = 5, max_depth = 2),
+                 family = "gaussian", sparse = FALSE)
+  expect_gt(nrow(mod$rules), 0)
+})
+
