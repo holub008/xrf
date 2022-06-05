@@ -2,7 +2,7 @@
 ## functions for preconditions on user input
 #############################################
 
-condition_xgb_control <- function(family, xgb_control, data, response_var) {
+condition_xgb_control <- function(family, xgb_control, data, response_var, prefit_xgb) {
   # this is a duplicated but necessary check
   if (!(response_var %in% colnames(data))) {
     stop(paste0('Response variable "', response_var, '" not present in supplied data'))
@@ -10,7 +10,7 @@ condition_xgb_control <- function(family, xgb_control, data, response_var) {
 
   data_mutated <- data
 
-  if (family == 'multinomial' && is.null(xgb_control$num_class)) {
+  if (family == 'multinomial' && is.null(xgb_control$num_class) && is.null(prefit_xgb)) {
     n_classes <- n_distinct(data[[response_var]])
     warning(paste0('Detected ', as.character(n_classes), ' classes to set num_class xgb_control parameter'))
     xgb_control$num_class <- n_distinct(data[[response_var]])
@@ -61,7 +61,8 @@ xrf_preconditions <- function(family, xgb_control, glm_control,
   }
 
   if (family == 'multinomial' &&
-      (is.null(xgb_control$num_class) || n_distinct(data[[response_var]]) != xgb_control$num_class)) {
+      ((is.null(xgb_control$num_class) || n_distinct(data[[response_var]]) != xgb_control$num_class) &&
+      is.null(prefit_xgb))) {
     stop('Must supply a num_class list element in xgb_control when using multinomial objective')
   }
 
@@ -387,7 +388,7 @@ xrf.formula <- function(object, data, family,
   expanded_formula <- expand_formula(object, data)
   response_var <- get_response(expanded_formula)
 
-  xgboost_conditioned <- condition_xgb_control(family, xgb_control, data, response_var)
+  xgboost_conditioned <- condition_xgb_control(family, xgb_control, data, response_var, prefit_xgb)
   xgb_control <- xgboost_conditioned$xgb_control
   data <- xgboost_conditioned$data
   xrf_preconditions(family, xgb_control, glm_control, data, response_var, prefit_xgb)
