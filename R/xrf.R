@@ -155,9 +155,18 @@ extract_xgb_rules <- function(m) {
     do(harvested_rules = rule_traverse(.data[1, ], .data) %>%
          filter(!is.na(.data$feature))) %>%
     pull(.data$harvested_rules) %>%
+    lapply(drop_zero_row_tbl) %>%
     bind_rows()
 
   rules
+}
+
+drop_zero_row_tbl <- function(tbl) {
+  if (nrow(tbl) == 0) {
+    return(NULL)
+  }
+
+  tbl
 }
 
 
