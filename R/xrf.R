@@ -268,7 +268,7 @@ evaluate_rules <- function(rules, data) {
       as.integer() %>%
       data.frame()
     )
-  rule_features <- bind_cols(per_rule_evaluation$rule_evaluation)
+  rule_features <- bind_cols(per_rule_evaluation$rule_evaluation, .name_repair = "minimal")
   colnames(rule_features) <- per_rule_evaluation$rule_id
 
   rule_features
@@ -291,7 +291,7 @@ evaluate_rules_dense_only <- function(rules, data) {
         as.integer() %>%
         data.frame()
     )
-  rule_features <- bind_cols(per_rule_evaluation$rule_evaluation)
+  rule_features <- bind_cols(per_rule_evaluation$rule_evaluation, .name_repair = "minimal")
   colnames(rule_features) <- per_rule_evaluation$rule_id
 
   rule_features
