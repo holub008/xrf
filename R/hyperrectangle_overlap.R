@@ -252,7 +252,8 @@ fuse_abutted_hyperrectangles <- function(volumes, original_volumes) {
       inner_join(
         fused_volumes,
         by = c('dimension' = 'dimension', 'max' = 'min'),
-        suffix = c('.left', '.right')
+        suffix = c('.left', '.right'),
+        relationship = "many-to-many" # TODO is this okay?
       ) |>
       filter(volume_id.left != volume_id.right) |> # this should only happen if a range is of size 0
       mutate(
