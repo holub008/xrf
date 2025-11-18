@@ -1,42 +1,5 @@
-library(testthat)
-
-context('model sanity checks')
-
-data('mtcars')
-dataset <- mtcars %>%
-  rbind(mtcars) %>% # double the dataset to avoid small class priors for glmnet cross validation
-  mutate(
-    vs = as.factor(vs),
-    am = as.factor(am)
-  )
-
-test_expected_fields <- function(model, depth, trees) {
-  max_splits <- (2^(depth + 1) - 2) * trees # number of edges in a binary tree for each tree = number of nodes - 1
-  max_rules <- 2^depth * trees # number of root -> leaf traversals in a binary tree for each tree
-
-  expected_max_coef <- 1 + # intercept
-    1 + # continuous mpg
-    1 + # continuous displacement
-    length(unique(dataset$cyl)) -
-    1 +
-    max_rules
-
-  expect_setequal(
-    c('glm', 'xgb', 'base_formula', 'rule_augmented_formula', 'rules'),
-    names(model)
-  )
-  expect_s3_class(model$glm, 'glmnot')
-  expect_s3_class(model$xgb, 'xgb.Booster')
-  expect_s3_class(model$base_formula, 'formula')
-  expect_s3_class(model$rule_augmented_formula, 'formula')
-  expect_s3_class(model$rules, 'data.frame')
-
-  expect_lte(nrow(model$rules), max_splits)
-  expect_lte(n_distinct(model$rules$rule_id), max_rules)
-  expect_lte(nrow(coef(model, lambda = 'lambda.min')), expected_max_coef)
-}
-
 test_that('model from dense design matrix has expected fields', {
+  dataset <- make_mtcars_test()
   depth <- 2
   trees <- 3
   m_xrf <- xrf(
@@ -51,6 +14,8 @@ test_that('model from dense design matrix has expected fields', {
 })
 
 test_that('model from sparse design matrix has expected fields', {
+  dataset <- make_mtcars_test()
+
   depth <- 2
   trees <- 3
   m_xrf <- xrf(
@@ -64,6 +29,8 @@ test_that('model from sparse design matrix has expected fields', {
 })
 
 test_that('model predicts binary outcome', {
+  dataset <- make_mtcars_test()
+
   m_xrf <- xrf(
     am ~ mpg + cyl + disp + hp + drat + wt + qsec,
     dataset,
@@ -105,6 +72,8 @@ test_that('model predicts binary outcome', {
 })
 
 test_that('model predicts continuous outcome', {
+  dataset <- make_mtcars_test()
+
   m_xrf <- xrf(
     mpg ~ .,
     dataset,

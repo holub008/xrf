@@ -1,7 +1,3 @@
-library(testthat)
-
-context('rule deoverlapping algorithm correctness')
-
 test_that('single dimnension overlapped rules are deoverlapped', {
   rules <- data.frame(
     rule_id = c('1', '1', '2', '2', '3', '4', '5'),
@@ -11,9 +7,9 @@ test_that('single dimnension overlapped rules are deoverlapped', {
     stringsAsFactors = FALSE
   )
 
-  deoverlapped_rules <- xrf_deoverlap_rules(rules) %>%
-    select(rule_id, min, max) %>%
-    arrange(min, max)
+  deoverlapped_rules <- xrf_deoverlap_rules(rules) |>
+    dplyr::select(rule_id, min, max) |>
+    dplyr::arrange(min, max)
 
   expect_equal(sort(deoverlapped_rules$min), c(-Inf, 1, 1, 2, 2, 3, 3, 4))
   expect_equal(deoverlapped_rules$max, c(1, 2, 2, 3, 3, 4, 4, Inf))
@@ -40,14 +36,14 @@ test_that('multi dimension overlapped rules are deoverlapped', {
     stringsAsFactors = FALSE
   )
 
-  deoverlapped_rules <- xrf_deoverlap_rules(rules) %>%
-    select(rule_id, min, max, dimension)
+  deoverlapped_rules <- xrf_deoverlap_rules(rules) |>
+    dplyr::select(rule_id, min, max, dimension)
 
-  rule_bounds <- deoverlapped_rules %>%
-    group_by(rule_id) %>%
-    count() %>%
-    pull(n) %>%
-    sort
+  rule_bounds <- deoverlapped_rules |>
+    group_by(rule_id) |>
+    count() |>
+    pull(n) |>
+    sort()
 
   # this isn't an exact check, because unlike the 1d case, the 2d is harder to reason about and has almost 20 rows
   # instead we check for the correct number of regions and number of bounds on each region, which is close
@@ -69,9 +65,9 @@ test_that('multi dimension overlapped rules are deoverlapped', {
   expect_equal(rule_bounds, c(2, 3, 4, 4, 4))
 
   # additionally, we test a point from each of the above regions to make sure they are belong to one region
-  distinct_deoverlapped_rules <- deoverlapped_rules %>%
-    select(rule_id, min, max, dimension) %>%
-    distinct()
+  distinct_deoverlapped_rules <- deoverlapped_rules |>
+    dplyr::select(rule_id, min, max, dimension) |>
+    dplyr::distinct()
 
   test_points <- data.frame(
     x <- rep(c(.5, 1.5, 3), each = 3),
@@ -80,14 +76,14 @@ test_that('multi dimension overlapped rules are deoverlapped', {
   )
   correctly_covering <- sapply(1:nrow(test_points), function(ix) {
     row <- test_points[ix, ]
-    n_regions <- distinct_deoverlapped_rules %>%
-      filter(
+    n_regions <- distinct_deoverlapped_rules |>
+      dplyr::filter(
         (row$x >= min & row$x <= max & dimension == 'x') |
           (row$y >= min & row$y <= max & dimension == 'y')
-      ) %>%
-      group_by(rule_id) %>%
-      count() %>%
-      filter(n == 2) %>%
+      ) |>
+      dplyr::group_by(rule_id) |>
+      dplyr::count() |>
+      dplyr::filter(n == 2) |>
       nrow()
 
     n_regions == row$covered
@@ -105,13 +101,13 @@ test_that('non-overlapped rules are unchanged', {
     stringsAsFactors = FALSE
   )
 
-  deoverlapped_rules <- xrf_deoverlap_rules(rules) %>%
-    select(min, max, dimension) %>%
-    arrange(min, max, dimension)
+  deoverlapped_rules <- xrf_deoverlap_rules(rules) |>
+    dplyr::select(min, max, dimension) |>
+    dplyr::arrange(min, max, dimension)
 
   # the equals dataframe is equivalent to the input dataframe (restructured)
   expect_equal(
-    deoverlapped_rules %>% as.data.frame(),
+    deoverlapped_rules |> as.data.frame(),
     data.frame(
       min = c(-Inf, -Inf, 2, 2),
       max = c(1, 1, Inf, Inf),
