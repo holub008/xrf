@@ -1,8 +1,10 @@
-get_response <- function(formula) {
+get_response <- function(formula, call = rlang::caller_env()) {
   # this code may execute before xrf_preconditions, so the exception originates here
   if (length(formula) != 3) {
-    stop(
-      'Supplied formula does not appear to follow expected form of response ~ predictors'
+    cli::cli_abort(
+      "Supplied formula does not appear to follow expected form of
+      {.code response ~ predictors}",
+      call = call
     )
   }
   all.vars(formula[[2]])

@@ -2,6 +2,7 @@
 # this wrapper allows training & prediction from a data.frame, and provides mechanisms for handling new levels in prediction
 # for current release, this class is not exposed in public API
 
+#' @export
 coef.glmnot <- function(object, ...) {
   coef(object$model, ...)
 }
@@ -15,14 +16,22 @@ predict.glmnot <- function(
   newdata,
   sparse = TRUE,
   lambda = 'lambda.min',
-  type = 'response'
+  type = 'response',
+  call = rlang::caller_env(),
+  ...
 ) {
   # convert a data-frame to a matrix matching the expected design matrix
   # this is really clunky design, but so be it
   if (is.data.frame(newdata)) {
     if (is.null(object$xlev)) {
-      stop(
-        'Cannot predict from a dataframe using a glmnot object which was trained on a matrix - train using a data frame, or predict from a matrix of the same form'
+      cli::cli_abort(
+        c(
+          "Cannot predict from a data frame using a glmnot object which was
+          trained on a  matrix.",
+          "i" = "Train using a data frame, or predict from a matrix of the
+          same form.",
+          call = call
+        )
       )
     }
     design_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
@@ -52,7 +61,7 @@ predict.glmnot <- function(
     ) # this case for when newdata is missing levels in the original dataframe
   }
 
-  predict(object$model, newx = newdata, s = lambda, type = type)
+  predict(object$model, newx = newdata, s = lambda, type = type, ...)
 }
 
 glmnot <- function(object, ...) {
@@ -72,7 +81,8 @@ glmnot.default <- function(
   alpha = 1,
   formula = NULL,
   xlev = NULL,
-  glm_control = list()
+  glm_control = list(),
+  ...
 ) {
   cv.glmnet.args <- list(X, y, family = family, alpha = alpha)
   cv.glmnet.args <- append(cv.glmnet.args, glm_control)
@@ -96,7 +106,9 @@ glmnot.formula <- function(
   alpha = 1,
   type.measure = 'auc',
   sparse = TRUE,
-  glm_control
+  glm_control,
+  call = rlang::caller_env(),
+  ...
 ) {
   constant_factors <- colnames(
     data %>%
@@ -126,7 +138,7 @@ glmnot.formula <- function(
 
   # ensure there are at least two terms left
   stopifnot(length(all.vars(final_formula)) > 1)
-  response_variable <- get_response(final_formula)
+  response_variable <- get_response(final_formula, call = call)
   columns <- get_predictors(final_formula)
 
   factor_column_indicator <- sapply(columns, function(column) {
@@ -151,6 +163,7 @@ glmnot.formula <- function(
     alpha = alpha,
     formula = final_formula,
     xlev = xlev,
-    glm_control = glm_control
+    glm_control = glm_control,
+    ...
   )
 }

@@ -7,15 +7,15 @@ condition_xgb_control <- function(
   xgb_control,
   data,
   response_var,
-  prefit_xgb
+  prefit_xgb,
+  call = rlang::caller_env()
 ) {
   # this is a duplicated but necessary check
   if (!(response_var %in% colnames(data))) {
-    stop(paste0(
-      'Response variable "',
-      response_var,
-      '" not present in supplied data'
-    ))
+    cli::cli_abort(
+      "Response variable {.var {response_var}} not present in supplied data",
+      call = call
+    )
   }
 
   data_mutated <- data
@@ -26,11 +26,10 @@ condition_xgb_control <- function(
       is.null(prefit_xgb)
   ) {
     n_classes <- n_distinct(data[[response_var]])
-    warning(paste0(
-      'Detected ',
-      as.character(n_classes),
-      ' classes to set num_class xgb_control parameter'
-    ))
+    cli::cli_warn(
+      "Detected {n_classes} class{?es} to set num_class xgb_control parameter",
+      call = call
+    )
     xgb_control$num_class <- n_distinct(data[[response_var]])
   }
 
@@ -59,43 +58,54 @@ xrf_preconditions <- function(
   glm_control,
   data,
   response_var,
-  prefit_xgb
+  prefit_xgb,
+  call = rlang::caller_env()
 ) {
   supported_families <- c('gaussian', 'binomial', 'multinomial')
   if (!(family %in% supported_families)) {
-    stop(paste0(
-      'Family "',
-      family,
-      '" is not currently supported. Supported families are: ',
-      paste0(supported_families, collapse = ', ')
-    ))
+    cli::cli_abort(
+      "Family {.val {family}} is not currently supported. Supported families
+      are: {.val {supported_families}}.",
+      call = call
+    )
   }
 
   if (!('nrounds' %in% names(xgb_control))) {
-    stop('Must supply an "nrounds" list element to the xgb_control argument')
+    cli::cli_abort(
+      "Must supply an {.arg nrounds} list element to the {.arg xgb_control}
+      argument.",
+      call = call
+    )
   }
 
   if ('objective' %in% names(xgb_control)) {
-    stop(
-      'User may not supply an "objective" list element to the xgb_control argument'
+    cli::cli_abort(
+      "User may not supply an {.arg objective} element to the {.arg xgb_control}
+      argument.",
+      call = call
     )
   }
 
   if (!(response_var %in% colnames(data))) {
-    stop(paste0(
-      'Response variable "',
-      response_var,
-      '" not present in supplied data'
-    ))
+    cli::cli_abort(
+      "Response variable {.var {response_var}} not present in supplied data",
+      call = call
+    )
   }
 
   if (any(is.na(data[[response_var]]))) {
-    stop('Response variable contains missing values which is not allowed')
+    cli::cli_abort(
+      "The response variable contains missing values.",
+      call = call
+    )
   }
 
   if (n_distinct(data[[response_var]]) <= 1) {
     # TODO cv.glmnet will still warn/fail when there is a very small number of observations per class for logistic regression
-    stop('Response variable shows no variation, model cannot be fit')
+    cli::cli_abort(
+      "Response variable shows no variation, model cannot be fit.",
+      call = call
+    )
   }
 
   if (
@@ -104,20 +114,19 @@ xrf_preconditions <- function(
         n_distinct(data[[response_var]]) != xgb_control$num_class) &&
         is.null(prefit_xgb))
   ) {
-    stop(
-      'Must supply a num_class list element in xgb_control when using multinomial objective'
+    cli::cli_abort(
+      "Must supply a {.arg num_class} list element in {.arg xgb_control} when using
+      multinomial objective",
+      call = call
     )
   }
 
-  if (
-    length(intersect(
-      c('type.measure', 'nfolds', 'foldid'),
-      names(glm_control)
-    )) <
-      2
-  ) {
-    stop(
-      'Must supply "type.measure" and ("nfolds" or "foldid") as glm_control parameters'
+  glm_control_nms <- c('type.measure', 'nfolds', 'foldid')
+  if (length(intersect(glm_control_nms, names(glm_control))) < 2) {
+    cli::cli_abort(
+      "Must supply {.arg type.measure} and ({.arg nfolds} or {.arg foldid})
+      as {.arg glm_control} parameters",
+      call = call
     )
   }
 
@@ -126,26 +135,25 @@ xrf_preconditions <- function(
     !is.null(prefit_xgb) &&
       length(intersect(allowed_tree_ensemble_classes, class(prefit_xgb))) == 0
   ) {
-    stop(
-      'Prefit tree ensemble must be of class {',
-      paste0(allowed_tree_ensemble_classes, collapse = ','),
-      "}"
+    cli::cli_abort(
+      "Prefit tree ensemble must be of class {.cls {allowed_tree_ensemble_classes}}.",
+      call = call
     )
   }
 
   features_with_commas <- grepl(',', colnames(data), fixed = TRUE)
   if (any(features_with_commas)) {
     feature_names <- colnames(data)[features_with_commas]
-    stop(paste0(
-      'The following column names contain illegal characters: ',
-      paste0("'", features_with_commas, "'", collapse = ',')
-    ))
+    cli::cli_abort(
+      "The column names {.val {features_with_commas}} contain illegal characters.",
+      call = call
+    )
   }
 }
 
 ## the choice of ensemble loss is currently hidden from the api to protect implementation details
 ## this may be exposed to the user in the future
-get_xgboost_objective <- function(family) {
+get_xgboost_objective <- function(family, call = rlang::caller_env()) {
   if (family == 'gaussian') {
     return('reg:squarederror')
   } else if (family == 'binomial') {
@@ -154,11 +162,10 @@ get_xgboost_objective <- function(family) {
     return('multi:softmax')
   }
 
-  stop(paste0(
-    'Unrecognized family ',
-    family,
-    ' which should have failed fast in preconditions'
-  ))
+  cli::cli_abort(
+    "Unrecognized family {.val {family}} which should have failed fast in preconditions.",
+    call = call
+  )
 }
 
 #############################################
@@ -298,7 +305,8 @@ correct_xgb_sparse_categoricals <- function(
   feature_metadata,
   xlev,
   # .5 matches what xgboost does with dense matrices
-  categorical_split_value = .5
+  categorical_split_value = .5,
+  call = rlang::caller_env()
 ) {
   if (nrow(rules) == 0) {
     return(rules)
@@ -326,18 +334,24 @@ correct_xgb_sparse_categoricals <- function(
     if (nrow(feature_level_matches) > 1) {
       # this means that several feaures and their levels may be concatenated to produce the same column name
       # e.g. feature "ora" with level "nge" and another feature "oran" with level "ge". or even a continuous with name "orange"
-      stop(paste0(
-        'In attempting to parse sparse design matrix columns, several feature/level matches found for: "',
-        feature_level,
-        '". Conservatively failing to user to change feature/level names or use dense matrices.'
-      ))
+      cli::cli_abort(
+        "In attempting to parse sparse design matrix columns, several feature/level
+        matches found for: {.val {feature_level}}. Conservatively failing to user
+        to change feature/level names or use dense matrices.",
+        call = call
+      )
     } else if (nrow(feature_level_matches) == 0) {
       # the feature couldn't be found. this is usually because a transformation was applied via the formula
-      stop(paste0(
-        'In attempting to parse sparse design matrix columns, no feature/level matches found for: "',
-        feature_level,
-        '". This is often caused by supplying a transformation in the input formula. User may either transform source data and use main effects only formula or set argument sparse=FALSE.'
-      ))
+      cli::cli_abort(
+        c(
+          "In attempting to parse sparse design matrix columns, no feature/level
+          matches found for: {.val {feature_level}}.",
+          "i" = "This is often caused by supplying a transformation in the input formula.",
+          "i" = "User may either transform source data and use main effects only
+          formula or set argument {.arg sparse}={.val FALSE}.",
+          call = call
+        )
+      )
     }
 
     if (!feature_level_matches$is_continuous) {
@@ -366,16 +380,17 @@ evaluate_rules <- function(rules, data) {
         split <- .data[split_ix, ]
         feature_ix <- which(split$feature == colnames(data))
         if (length(feature_ix) == 0) {
-          stop(paste0(
-            'Feature "',
-            split$feature,
-            '" from ruleset is not present in the input data to be evaluated'
-          ))
+          cli::cli_abort(
+            "Feature {.val {split$feature}} from ruleset is not present in the
+            input data to be evaluated",
+            call = call
+          )
         } else if (length(feature_ix) > 1) {
-          stop(paste0(
-            'Unexpectedly found two columns with the same name in input data (user must resolve): ',
-            split$feature
-          ))
+          cli::cli_abort(
+            "Unexpectedly found {.val {split$feature}} twice in input data
+            (user must resolve).",
+            call = call
+          )
         }
         split_comparison <- data[, feature_ix] < split$split
         return(split_comparison == split$less_than)
@@ -555,8 +570,9 @@ xrf.formula <- function(
     m_xgb <- prefit_xgb
     rules <- extract_xgb_rules(m_xgb)
     if (length(setdiff(rules$feature, colnames(design_matrix))) > 0) {
-      stop(
-        'prefit_xgb contains features (or factor-levels) not present in the input training data. This is currently not supported.'
+      cli::cli_abort(
+        "prefit_xgb contains features (or factor-levels) not present in the
+        input training data. This is currently not supported."
       )
       # one simple approach would be to simply remove these feature splits from the rules
       # but that potentially dilutes the power of this method. for now, it's on the user to rectify this issue
@@ -595,10 +611,10 @@ xrf.formula <- function(
 
   overlapped_feature_names <- intersect(colnames(rule_features), colnames(data))
   if (length(overlapped_feature_names) > 0) {
-    warning(paste0(
-      'Found the following overlapped raw feature & rule names (the rule features will be dropped): ',
-      paste(overlapped_feature_names, collapse = ',')
-    ))
+    cli::cli_warn(
+      "Found overlapped raw feature & rule names {overlapped_feature_names}
+      (the rule features will be dropped)."
+    )
     rule_features <- rule_features[,
       !(colnames(rule_features) %in% overlapped_feature_names)
     ]
