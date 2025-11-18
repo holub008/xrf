@@ -14,7 +14,7 @@ BugReports: https://github.com/holub008/xrf/issues
 Depends: R (>= 3.1.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.3
 Imports: 
     Matrix,
     glmnet (>= 3.0),

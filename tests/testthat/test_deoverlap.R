@@ -15,11 +15,8 @@ test_that('single dimnension overlapped rules are deoverlapped', {
     select(rule_id, min, max) %>%
     arrange(min, max)
 
-
-  expect_equal(sort(deoverlapped_rules$min),
-               c(-Inf, 1, 1, 2, 2, 3, 3, 4))
-  expect_equal(deoverlapped_rules$max,
-               c(1, 2, 2, 3, 3, 4, 4, Inf))
+  expect_equal(sort(deoverlapped_rules$min), c(-Inf, 1, 1, 2, 2, 3, 3, 4))
+  expect_equal(deoverlapped_rules$max, c(1, 2, 2, 3, 3, 4, 4, Inf))
 })
 
 test_that('multi dimension overlapped rules are deoverlapped', {
@@ -84,7 +81,10 @@ test_that('multi dimension overlapped rules are deoverlapped', {
   correctly_covering <- sapply(1:nrow(test_points), function(ix) {
     row <- test_points[ix, ]
     n_regions <- distinct_deoverlapped_rules %>%
-      filter((row$x >= min & row$x <= max & dimension == 'x') | (row$y >= min & row$y <= max & dimension == 'y')) %>%
+      filter(
+        (row$x >= min & row$x <= max & dimension == 'x') |
+          (row$y >= min & row$y <= max & dimension == 'y')
+      ) %>%
       group_by(rule_id) %>%
       count() %>%
       filter(n == 2) %>%
@@ -110,10 +110,13 @@ test_that('non-overlapped rules are unchanged', {
     arrange(min, max, dimension)
 
   # the equals dataframe is equivalent to the input dataframe (restructured)
-  expect_equal(deoverlapped_rules %>% as.data.frame(), data.frame(
-    min = c(-Inf, -Inf, 2, 2),
-    max = c(1, 1, Inf, Inf),
-    dimension = c('x', 'y', 'x', 'y'),
-    stringsAsFactors = FALSE)
+  expect_equal(
+    deoverlapped_rules %>% as.data.frame(),
+    data.frame(
+      min = c(-Inf, -Inf, 2, 2),
+      max = c(1, 1, Inf, Inf),
+      dimension = c('x', 'y', 'x', 'y'),
+      stringsAsFactors = FALSE
+    )
   )
 })
