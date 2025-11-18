@@ -39,3 +39,33 @@ startsWith <- function(base, prefix) {
 lstrip <- function(full, to_remove) {
   sub(sprintf("^%s", to_remove), "", full)
 }
+
+# declare false positive for global data
+utils::globalVariables(
+  c(
+    "Node",
+    "Tree",
+    "bound",
+    "conjunction",
+    "dimension",
+    "dimension.x",
+    "dimension.y",
+    "feature",
+    "feature_name",
+    "harvested_rules",
+    "less_than",
+    "level_remainder",
+    "lower_bound",
+    "max.right",
+    "may_be_rule_feature",
+    "original_volume_id",
+    "rule_id",
+    "space_id",
+    "upper_bound",
+    "volume_id",
+    "volume_id.left",
+    "volume_id.right",
+    "volume_id.x",
+    "volume_id.y"
+  )
+)
