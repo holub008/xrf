@@ -234,13 +234,13 @@ rule_traverse <- function(row, tree) {
 # each row represents an individual boolean clause evaluated by feature (less_than ? < : >=) split
 extract_xgb_rules <- function(m) {
   rules <- xgb.model.dt.tree(model = m) |>
-    group_by(.data$Tree) |>
-    arrange(.data$Node) |> # put the root at the top of each tree group
+    group_by(Tree) |>
+    arrange(Node) |> # put the root at the top of each tree group
     do(
       harvested_rules = rule_traverse(.data[1, ], .data) |>
-        filter(!is.na(.data$feature))
+        filter(!is.na(feature))
     ) |>
-    pull(.data$harvested_rules) |>
+    pull(harvested_rules) |>
     lapply(drop_zero_row_tbl) |>
     bind_rows()
 
@@ -268,7 +268,7 @@ build_feature_metadata <- function(data) {
 
   feature_metadata <- all_features |>
     mutate(
-      is_continuous = sapply(.data$feature_name, function(fname) {
+      is_continuous = sapply(feature_name, function(fname) {
         is.numeric(data[[fname]])
       })
     )
@@ -316,19 +316,19 @@ correct_xgb_sparse_categoricals <- function(
     feature_level <- rules[row_ix, 'feature']
     classified_features <- feature_metadata |>
       mutate(
-        level_remainder = sapply(.data$feature_name, function(fn) {
+        level_remainder = sapply(feature_name, function(fn) {
           lstrip(feature_level, fn)
         }),
-        may_be_rule_feature = sapply(.data$feature_name, function(fn) {
+        may_be_rule_feature = sapply(feature_name, function(fn) {
           !startsWith(feature_level, fn)
         })
       )
 
     feature_level_matches <- classified_features |>
-      filter(!.data$may_be_rule_feature) |>
+      filter(!may_be_rule_feature) |>
       filter(
-        .data$level_remainder == '' |
-          has_matching_level(.data$feature_name, .data$level_remainder, xlev)
+        level_remainder == '' |
+          has_matching_level(feature_name, level_remainder, xlev)
       )
 
     if (nrow(feature_level_matches) > 1) {
@@ -374,7 +374,7 @@ correct_xgb_sparse_categoricals <- function(
 
 evaluate_rules <- function(rules, data) {
   per_rule_evaluation <- rules |>
-    group_by(.data$rule_id) |>
+    group_by(rule_id) |>
     do(
       rule_evaluation = sapply(1:nrow(.data), function(split_ix) {
         split <- .data[split_ix, ]
@@ -411,7 +411,7 @@ evaluate_rules <- function(rules, data) {
 evaluate_rules_dense_only <- function(rules, data) {
   data_df <- as.data.frame(data)
   per_rule_evaluation <- rules |>
-    group_by(.data$rule_id) |>
+    group_by(rule_id) |>
     do(
       # yes, this is gross
       # yes, this is fast
@@ -590,7 +590,7 @@ xrf.formula <- function(
 
   if (deoverlap) {
     rules <- xrf_deoverlap_rules(rules) |>
-      select(.data$rule_id, .data$feature, .data$split, .data$less_than)
+      select(rule_id, feature, split, less_than)
   }
 
   rule_features <- if (sparse) {
@@ -602,12 +602,12 @@ xrf.formula <- function(
   varying_rules <- remove_no_variance_rules(rule_features)
   rule_features <- rule_features[, varying_rules]
   rules <- rules |>
-    filter(.data$rule_id %in% varying_rules)
+    filter(rule_id %in% varying_rules)
 
   non_duplicate_rules <- dedupe_train_rules(rule_features)
   rule_features <- rule_features[, non_duplicate_rules]
   rules <- rules |>
-    filter(.data$rule_id %in% non_duplicate_rules)
+    filter(rule_id %in% non_duplicate_rules)
 
   overlapped_feature_names <- intersect(colnames(rule_features), colnames(data))
   if (length(overlapped_feature_names) > 0) {
@@ -725,13 +725,13 @@ predict.xrf <- function(
 
 synthesize_conjunctions <- function(rules) {
   rules |>
-    group_by(.data$rule_id) |>
-    arrange(.data$feature, .data$split) |>
+    group_by(rule_id) |>
+    arrange(feature, split) |>
     summarize(
       conjunction = paste0(
-        .data$feature,
-        ifelse(.data$less_than, '<', '>='),
-        format(.data$split, scientific = FALSE, digits = 4),
+        feature,
+        ifelse(less_than, '<', '>='),
+        format(split, scientific = FALSE, digits = 4),
         collapse = ' & '
       )
     )
@@ -763,9 +763,9 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
     left_join(rule_conjunctions, by = c('term' = 'rule_id')) |>
     arrange_at(colnames(glm_df[1])) |>
     mutate(
-      rule = .data$conjunction
+      rule = conjunction
     ) |>
-    select(-.data$conjunction)
+    select(-conjunction)
 }
 
 #' Summarize an eXtreme RuleFit model
