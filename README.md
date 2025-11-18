@@ -84,9 +84,9 @@ auc <- function (prediction, actual) {
   unname(1 - mann_whit/(sum(actual) * as.double(sum(!actual))))
 }
 
-census_income <- census_income %>%
+census_income <- census_income |>
   # pre is picky about data types 
-  mutate_if(is.character, as.factor) %>%
+  mutate_if(is.character, as.factor) |>
   mutate(
     above_50k = as.character(above_50k) == ' >50K'
   )
@@ -176,8 +176,8 @@ coef_deoverlap <- coef(m_xrf_deoverlap, lambda = 'lambda.1se')
 
 Looking at the overlapped model:
 ```r
-coef_overlap %>%
- filter(coefficient_lambda.1se != 0) %>%
+coef_overlap |>
+ filter(coefficient_lambda.1se != 0) |>
  arrange(rule)
 ```
 
@@ -206,8 +206,8 @@ Notice that the rules are not in exclusion. To understand the impact of capital 
 
 Now for the de-overlapped model:
 ```r
-coef_deoverlap %>%
- filter(coefficient_lambda.1se != 0) %>%
+coef_deoverlap |>
+ filter(coefficient_lambda.1se != 0) |>
  arrange(term)
 ```
 

@@ -111,7 +111,7 @@ glmnot.formula <- function(
   ...
 ) {
   constant_factors <- colnames(
-    data %>%
+    data |>
       select_if(function(column) {
         if (!is.numeric(column)) {
           return(n_distinct(column) < 2)
@@ -145,7 +145,7 @@ glmnot.formula <- function(
     !is.numeric(data[[column]]) && column != response_variable
   })
   factor_columns <- columns[factor_column_indicator]
-  xlev <- lapply(data %>% select(factor_columns), function(x) {
+  xlev <- lapply(data |> select(all_of(factor_columns)), function(x) {
     # respect original ordering of levels if factor, otherwise arbitrary ordering
     if (is.factor(x)) levels(x) else as.character(unique(x))
   })
