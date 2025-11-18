@@ -711,7 +711,9 @@ predict.xrf <- function(
   type = 'response',
   ...
 ) {
-  stopifnot(is.data.frame(newdata))
+  if (!is.data.frame(newdata)) {
+    cli::cli_abort("{.arg newdata} should be a data frame.")
+  }
   full_data <- model.matrix(object, newdata, sparse)
 
   predict(

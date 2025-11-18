@@ -27,7 +27,7 @@ predict.glmnot <- function(
       cli::cli_abort(
         c(
           "Cannot predict from a data frame using a glmnot object which was
-          trained on a  matrix.",
+          trained on a matrix.",
           "i" = "Train using a data frame, or predict from a matrix of the
           same form.",
           call = call
