@@ -75,7 +75,7 @@ glmnot <- function(object, ...) {
 #
 #' @import glmnet
 glmnot.default <- function(
-  X,
+  object,
   y,
   family,
   alpha = 1,
@@ -84,7 +84,7 @@ glmnot.default <- function(
   glm_control = list(),
   ...
 ) {
-  cv.glmnet.args <- list(X, y, family = family, alpha = alpha)
+  cv.glmnet.args <- list(object, y, family = family, alpha = alpha)
   cv.glmnet.args <- append(cv.glmnet.args, glm_control)
 
   m <- do.call(cv.glmnet, cv.glmnet.args)
