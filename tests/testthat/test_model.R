@@ -54,20 +54,17 @@ test_that('model predicts binary outcome', {
   preds_link <- predict(m_xrf, dataset, type = 'link')
 
   expect_equal(preds_response_dense, preds_response_sparse)
-  expect(
-    all(preds_response_dense < 1 & preds_response_dense > 0),
-    'Binomial predicted outcome does not represent a valid posterior'
+  expect_true(
+    all(preds_response_dense < 1 & preds_response_dense > 0)
   )
-  expect(
+  expect_true(
     all(preds_response_sparse < 1 & preds_response_sparse > 0),
-    'Binomial predicted outcome does not represent a valid posterior'
   )
   # since we are using deviance on the LASSO fit, the model should be calibrated
   expect_equal(mean(preds_response_dense), mean(dataset$am == '1'))
 
-  expect(
-    any(preds_link < 0 | preds_link > 1),
-    'Link predictions appear to be probabilities'
+  expect_true(
+    any(preds_link < 0 | preds_link > 1)
   )
 })
 
