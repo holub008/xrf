@@ -2,101 +2,170 @@
 ## functions for preconditions on user input
 #############################################
 
-condition_xgb_control <- function(family, xgb_control, data, response_var, prefit_xgb) {
+condition_xgb_control <- function(
+  family,
+  xgb_control,
+  data,
+  response_var,
+  prefit_xgb,
+  call = rlang::caller_env()
+) {
   # this is a duplicated but necessary check
   if (!(response_var %in% colnames(data))) {
-    stop(paste0('Response variable "', response_var, '" not present in supplied data'))
+    cli::cli_abort(
+      "Response variable {.var {response_var}} not present in supplied data",
+      call = call
+    )
   }
 
   data_mutated <- data
 
-  if (family == 'multinomial' && is.null(xgb_control$num_class) && is.null(prefit_xgb)) {
+  if (
+    family == 'multinomial' &&
+      is.null(xgb_control$num_class) &&
+      is.null(prefit_xgb)
+  ) {
     n_classes <- n_distinct(data[[response_var]])
-    warning(paste0('Detected ', as.character(n_classes), ' classes to set num_class xgb_control parameter'))
+    cli::cli_warn(
+      "Detected {n_classes} class{?es} to set num_class xgb_control parameter",
+      call = call
+    )
     xgb_control$num_class <- n_distinct(data[[response_var]])
   }
 
   # xgboost expects multinomial labels to be 0:num_class
-  if (family == 'multinomial' &&
-      (is.factor(data[[response_var]]) || is.character(data[[response_var]]))) {
+  if (
+    family == 'multinomial' &&
+      (is.factor(data[[response_var]]) || is.character(data[[response_var]]))
+  ) {
     integer_response <- as.integer(as.factor(data[[response_var]]))
     data_mutated[[response_var]] <- integer_response - min(integer_response)
-  }
-  else if (family == 'binomial' &&
-           is.factor(data[[response_var]]) || is.character(data[[response_var]])) {
+  } else if (
+    family == 'binomial' &&
+      is.factor(data[[response_var]]) ||
+      is.character(data[[response_var]])
+  ) {
     integer_response <- as.integer(as.factor(data[[response_var]]))
     data_mutated[[response_var]] <- integer_response - min(integer_response)
   }
 
-  list(xgb_control = xgb_control,
-       data = data_mutated)
+  list(xgb_control = xgb_control, data = data_mutated)
 }
 
-xrf_preconditions <- function(family, xgb_control, glm_control,
-                              data, response_var, prefit_xgb) {
+xrf_preconditions <- function(
+  family,
+  xgb_control,
+  glm_control,
+  data,
+  response_var,
+  prefit_xgb,
+  call = rlang::caller_env()
+) {
   supported_families <- c('gaussian', 'binomial', 'multinomial')
   if (!(family %in% supported_families)) {
-    stop(paste0('Family "', family, '" is not currently supported. Supported families are: ', paste0(supported_families, collapse = ', ')))
+    cli::cli_abort(
+      "Family {.val {family}} is not currently supported. Supported families
+      are: {.val {supported_families}}.",
+      call = call
+    )
   }
 
   if (!('nrounds' %in% names(xgb_control))) {
-    stop('Must supply an "nrounds" list element to the xgb_control argument')
+    cli::cli_abort(
+      "Must supply an {.arg nrounds} list element to the {.arg xgb_control}
+      argument.",
+      call = call
+    )
   }
 
   if ('objective' %in% names(xgb_control)) {
-    stop('User may not supply an "objective" list element to the xgb_control argument')
+    cli::cli_abort(
+      "User may not supply an {.arg objective} element to the {.arg xgb_control}
+      argument.",
+      call = call
+    )
   }
 
   if (!(response_var %in% colnames(data))) {
-    stop(paste0('Response variable "', response_var, '" not present in supplied data'))
+    cli::cli_abort(
+      "Response variable {.var {response_var}} not present in supplied data",
+      call = call
+    )
   }
 
   if (any(is.na(data[[response_var]]))) {
-    stop('Response variable contains missing values which is not allowed')
+    cli::cli_abort(
+      "The response variable contains missing values.",
+      call = call
+    )
   }
 
   if (n_distinct(data[[response_var]]) <= 1) {
     # TODO cv.glmnet will still warn/fail when there is a very small number of observations per class for logistic regression
-    stop('Response variable shows no variation, model cannot be fit')
+    cli::cli_abort(
+      "Response variable shows no variation, model cannot be fit.",
+      call = call
+    )
   }
 
-  if (family == 'multinomial' &&
-      ((is.null(xgb_control$num_class) || n_distinct(data[[response_var]]) != xgb_control$num_class) &&
-      is.null(prefit_xgb))) {
-    stop('Must supply a num_class list element in xgb_control when using multinomial objective')
+  if (
+    family == 'multinomial' &&
+      ((is.null(xgb_control$num_class) ||
+        n_distinct(data[[response_var]]) != xgb_control$num_class) &&
+        is.null(prefit_xgb))
+  ) {
+    cli::cli_abort(
+      "Must supply a {.arg num_class} list element in {.arg xgb_control} when using
+      multinomial objective",
+      call = call
+    )
   }
 
-  if (length(intersect(c('type.measure', 'nfolds', 'foldid'), names(glm_control))) < 2) {
-    stop('Must supply "type.measure" and ("nfolds" or "foldid") as glm_control parameters')
+  glm_control_nms <- c('type.measure', 'nfolds', 'foldid')
+  if (length(intersect(glm_control_nms, names(glm_control))) < 2) {
+    cli::cli_abort(
+      "Must supply {.arg type.measure} and ({.arg nfolds} or {.arg foldid})
+      as {.arg glm_control} parameters",
+      call = call
+    )
   }
 
   allowed_tree_ensemble_classes <- c('xgb.Booster')
-  if (!is.null(prefit_xgb) && length(intersect(allowed_tree_ensemble_classes, class(prefit_xgb))) == 0) {
-    stop('Prefit tree ensemble must be of class {', paste0(allowed_tree_ensemble_classes, collapse = ','), "}")
+  if (
+    !is.null(prefit_xgb) &&
+      length(intersect(allowed_tree_ensemble_classes, class(prefit_xgb))) == 0
+  ) {
+    cli::cli_abort(
+      "Prefit tree ensemble must be of class {.cls {allowed_tree_ensemble_classes}}.",
+      call = call
+    )
   }
 
   features_with_commas <- grepl(',', colnames(data), fixed = TRUE)
   if (any(features_with_commas)) {
     feature_names <- colnames(data)[features_with_commas]
-    stop(paste0('The following column names contain illegal characters: ', paste0("'", features_with_commas, "'", collapse = ',')))
+    cli::cli_abort(
+      "The column names {.val {features_with_commas}} contain illegal characters.",
+      call = call
+    )
   }
-
 }
 
 ## the choice of ensemble loss is currently hidden from the api to protect implementation details
 ## this may be exposed to the user in the future
-get_xgboost_objective <- function(family) {
+get_xgboost_objective <- function(family, call = rlang::caller_env()) {
   if (family == 'gaussian') {
     return('reg:squarederror')
-  }
-  else if (family == 'binomial') {
+  } else if (family == 'binomial') {
     return('binary:logistic')
-  }
-  else if (family == 'multinomial') {
+  } else if (family == 'multinomial') {
     return('multi:softmax')
   }
 
-  stop(paste0('Unrecognized family ', family, ' which should have failed fast in preconditions'))
+  cli::cli_abort(
+    "Unrecognized family {.val {family}} which should have failed fast in preconditions.",
+    call = call
+  )
 }
 
 #############################################
@@ -111,8 +180,9 @@ augment_rules <- function(row, rule_ids, less_than) {
         rule_id = rule_id,
         feature = row$Feature,
         split = row$Split,
-        less_than = less_than)}
+        less_than = less_than
       )
+    })
   )
 }
 
@@ -125,24 +195,37 @@ rule_traverse <- function(row, tree) {
       feature = NA,
       split = NA,
       less_than = NA,
-      stringsAsFactors = FALSE))
-  }
-  else {
+      stringsAsFactors = FALSE
+    ))
+  } else {
     # the Yes/No obfuscates the simplicity of the algo - in order tree traversal
-    left_child <- tree[tree$ID == row$Yes,]
+    left_child <- tree[tree$ID == row$Yes, ]
     stopifnot(nrow(left_child) == 1) # this can be trusted from xgboost, but fail if that changes
-    right_child <- tree[tree$ID == row$No,]
+    right_child <- tree[tree$ID == row$No, ]
     stopifnot(nrow(right_child) == 1)
 
     # recursion will bubble up the conjunctive rule to this split
     left_rules <- rule_traverse(left_child, tree)
     right_rules <- rule_traverse(right_child, tree)
 
-    left_rules_augmented <- augment_rules(row, unique(left_rules$rule_id), less_than = TRUE)
-    right_rules_augmented <- augment_rules(row, unique(right_rules$rule_id), less_than = FALSE)
+    left_rules_augmented <- augment_rules(
+      row,
+      unique(left_rules$rule_id),
+      less_than = TRUE
+    )
+    right_rules_augmented <- augment_rules(
+      row,
+      unique(right_rules$rule_id),
+      less_than = FALSE
+    )
 
-    return(rbind(left_rules_augmented, right_rules_augmented, left_rules, right_rules,
-                 stringsAsFactors = FALSE))
+    return(rbind(
+      left_rules_augmented,
+      right_rules_augmented,
+      left_rules,
+      right_rules,
+      stringsAsFactors = FALSE
+    ))
   }
 }
 
@@ -150,13 +233,15 @@ rule_traverse <- function(row, tree) {
 # this function produces a data frame with columns rule_id (which idenitifies a total conjunction), feature, split, and less_than
 # each row represents an individual boolean clause evaluated by feature (less_than ? < : >=) split
 extract_xgb_rules <- function(m) {
-  rules <- xgb.model.dt.tree(model = m) %>%
-    group_by(.data$Tree) %>%
-    arrange(.data$Node) %>% # put the root at the top of each tree group
-    do(harvested_rules = rule_traverse(.data[1, ], .data) %>%
-         filter(!is.na(.data$feature))) %>%
-    pull(.data$harvested_rules) %>%
-    lapply(drop_zero_row_tbl) %>%
+  rules <- xgb.model.dt.tree(model = m) |>
+    group_by(Tree) |>
+    arrange(Node) |> # put the root at the top of each tree group
+    do(
+      harvested_rules = rule_traverse(.data[1, ], .data) |>
+        filter(!is.na(feature))
+    ) |>
+    pull(harvested_rules) |>
+    lapply(drop_zero_row_tbl) |>
     bind_rows()
 
   rules
@@ -176,18 +261,24 @@ drop_zero_row_tbl <- function(tbl) {
 ##################################################
 
 build_feature_metadata <- function(data) {
-  all_features <- data.frame(feature_name = colnames(data),
-                             stringsAsFactors = FALSE)
+  all_features <- data.frame(
+    feature_name = colnames(data),
+    stringsAsFactors = FALSE
+  )
 
-  feature_metadata <- all_features %>%
+  feature_metadata <- all_features |>
     mutate(
-      is_continuous = sapply(.data$feature_name, function(fname){ is.numeric(data[[fname]]) })
+      is_continuous = sapply(feature_name, function(fname) {
+        is.numeric(data[[fname]])
+      })
     )
 
-  xlev <- data %>%
-    select_if(function(x) { !is.numeric(x) }) %>%
+  xlev <- data |>
+    select_if(function(x) {
+      !is.numeric(x)
+    }) |>
     lapply(function(x) {
-      if(is.factor(x)) levels(x) else as.character(unique(x))
+      if (is.factor(x)) levels(x) else as.character(unique(x))
     })
 
   list(
@@ -209,33 +300,58 @@ has_matching_level <- function(feature_name, level_remainder, xlev) {
   return(FALSE)
 }
 
-correct_xgb_sparse_categoricals <- function(rules, feature_metadata, xlev,
-                                            # .5 matches what xgboost does with dense matrices
-                                            categorical_split_value = .5) {
+correct_xgb_sparse_categoricals <- function(
+  rules,
+  feature_metadata,
+  xlev,
+  # .5 matches what xgboost does with dense matrices
+  categorical_split_value = .5,
+  call = rlang::caller_env()
+) {
   if (nrow(rules) == 0) {
     return(rules)
   }
 
   for (row_ix in 1:nrow(rules)) {
     feature_level <- rules[row_ix, 'feature']
-    classified_features <- feature_metadata %>%
+    classified_features <- feature_metadata |>
       mutate(
-        level_remainder = sapply(.data$feature_name, function(fn){ lstrip(feature_level, fn) }),
-        may_be_rule_feature = sapply(.data$feature_name, function(fn) { !startsWith(feature_level, fn) })
+        level_remainder = sapply(feature_name, function(fn) {
+          lstrip(feature_level, fn)
+        }),
+        may_be_rule_feature = sapply(feature_name, function(fn) {
+          !startsWith(feature_level, fn)
+        })
       )
 
-    feature_level_matches <- classified_features %>%
-      filter(!.data$may_be_rule_feature) %>%
-      filter(.data$level_remainder == '' | has_matching_level(.data$feature_name, .data$level_remainder, xlev))
+    feature_level_matches <- classified_features |>
+      filter(!may_be_rule_feature) |>
+      filter(
+        level_remainder == '' |
+          has_matching_level(feature_name, level_remainder, xlev)
+      )
 
     if (nrow(feature_level_matches) > 1) {
       # this means that several feaures and their levels may be concatenated to produce the same column name
       # e.g. feature "ora" with level "nge" and another feature "oran" with level "ge". or even a continuous with name "orange"
-      stop(paste0('In attempting to parse sparse design matrix columns, several feature/level matches found for: "', feature_level, '". Conservatively failing to user to change feature/level names or use dense matrices.'))
-    }
-    else if (nrow(feature_level_matches) == 0) {
+      cli::cli_abort(
+        "In attempting to parse sparse design matrix columns, several feature/level
+        matches found for: {.val {feature_level}}. Conservatively failing to user
+        to change feature/level names or use dense matrices.",
+        call = call
+      )
+    } else if (nrow(feature_level_matches) == 0) {
       # the feature couldn't be found. this is usually because a transformation was applied via the formula
-      stop(paste0('In attempting to parse sparse design matrix columns, no feature/level matches found for: "', feature_level, '". This is often caused by supplying a transformation in the input formula. User may either transform source data and use main effects only formula or set argument sparse=FALSE.'))
+      cli::cli_abort(
+        c(
+          "In attempting to parse sparse design matrix columns, no feature/level
+          matches found for: {.val {feature_level}}.",
+          "i" = "This is often caused by supplying a transformation in the input formula.",
+          "i" = "User may either transform source data and use main effects only
+          formula or set argument {.arg sparse}={.val FALSE}.",
+          call = call
+        )
+      )
     }
 
     if (!feature_level_matches$is_continuous) {
@@ -257,28 +373,36 @@ correct_xgb_sparse_categoricals <- function(rules, feature_metadata, xlev,
 #############################################
 
 evaluate_rules <- function(rules, data) {
-  per_rule_evaluation <- rules %>%
-    group_by(.data$rule_id) %>%
-    do (
+  per_rule_evaluation <- rules |>
+    group_by(rule_id) |>
+    do(
       rule_evaluation = sapply(1:nrow(.data), function(split_ix) {
         split <- .data[split_ix, ]
         feature_ix <- which(split$feature == colnames(data))
         if (length(feature_ix) == 0) {
-          stop(paste0('Feature "', split$feature,
-                         '" from ruleset is not present in the input data to be evaluated'))
-        }
-        else if (length(feature_ix) > 1) {
-          stop(paste0('Unexpectedly found two columns with the same name in input data (user must resolve): ',
-                      split$feature))
+          cli::cli_abort(
+            "Feature {.val {split$feature}} from ruleset is not present in the
+            input data to be evaluated",
+            call = call
+          )
+        } else if (length(feature_ix) > 1) {
+          cli::cli_abort(
+            "Unexpectedly found {.val {split$feature}} twice in input data
+            (user must resolve).",
+            call = call
+          )
         }
         split_comparison <- data[, feature_ix] < split$split
         return(split_comparison == split$less_than)
-      }) %>%
-      apply(1, all) %>%
-      as.integer() %>%
-      data.frame()
+      }) |>
+        apply(1, all) |>
+        as.integer() |>
+        data.frame()
     )
-  rule_features <- bind_cols(per_rule_evaluation$rule_evaluation, .name_repair = "minimal")
+  rule_features <- bind_cols(
+    per_rule_evaluation$rule_evaluation,
+    .name_repair = "minimal"
+  )
   colnames(rule_features) <- per_rule_evaluation$rule_id
 
   rule_features
@@ -286,22 +410,29 @@ evaluate_rules <- function(rules, data) {
 
 evaluate_rules_dense_only <- function(rules, data) {
   data_df <- as.data.frame(data)
-  per_rule_evaluation <- rules %>%
-    group_by(.data$rule_id) %>%
-    do (
+  per_rule_evaluation <- rules |>
+    group_by(rule_id) |>
+    do(
       # yes, this is gross
       # yes, this is fast
-      rule_evaluation = eval(parse(text=paste0(
-        paste0('`', .data$feature, '`'),
-        ifelse(.data$less_than, ' < ', ' >= '),
-        .data$split,
-        collapse = ' & '
-      )),
-      data_df) %>%
-        as.integer() %>%
+      rule_evaluation = eval(
+        parse(
+          text = paste0(
+            paste0('`', .data$feature, '`'),
+            ifelse(.data$less_than, ' < ', ' >= '),
+            .data$split,
+            collapse = ' & '
+          )
+        ),
+        data_df
+      ) |>
+        as.integer() |>
         data.frame()
     )
-  rule_features <- bind_cols(per_rule_evaluation$rule_evaluation, .name_repair = "minimal")
+  rule_features <- bind_cols(
+    per_rule_evaluation$rule_evaluation,
+    .name_repair = "minimal"
+  )
   colnames(rule_features) <- per_rule_evaluation$rule_id
 
   rule_features
@@ -323,8 +454,8 @@ remove_no_variance_rules <- function(evaluated_rules) {
 
 # removes any exactly equal rules
 dedupe_train_rules <- function(evaluated_rules) {
-  as.matrix(evaluated_rules) %>%
-    unique(MARGIN=2) %>%
+  as.matrix(evaluated_rules) |>
+    unique(MARGIN = 2) |>
     colnames()
 }
 
@@ -386,21 +517,37 @@ xrf <- function(object, ...) {
 #'          family = 'gaussian')
 #'
 #' @export
-xrf.formula <- function(object, data, family,
-                        xgb_control = list(nrounds = 100, max_depth = 3),
-                        glm_control = list(type.measure = 'deviance',
-                                           nfolds = 5),
-                        sparse = TRUE,
-                        prefit_xgb = NULL,
-                        deoverlap = FALSE,
-                        ...) {
+xrf.formula <- function(
+  object,
+  data,
+  family,
+  xgb_control = list(nrounds = 100, max_depth = 3),
+  glm_control = list(type.measure = 'deviance', nfolds = 5),
+  sparse = TRUE,
+  prefit_xgb = NULL,
+  deoverlap = FALSE,
+  ...
+) {
   expanded_formula <- expand_formula(object, data)
   response_var <- get_response(expanded_formula)
 
-  xgboost_conditioned <- condition_xgb_control(family, xgb_control, data, response_var, prefit_xgb)
+  xgboost_conditioned <- condition_xgb_control(
+    family,
+    xgb_control,
+    data,
+    response_var,
+    prefit_xgb
+  )
   xgb_control <- xgboost_conditioned$xgb_control
   data <- xgboost_conditioned$data
-  xrf_preconditions(family, xgb_control, glm_control, data, response_var, prefit_xgb)
+  xrf_preconditions(
+    family,
+    xgb_control,
+    glm_control,
+    data,
+    response_var,
+    prefit_xgb
+  )
 
   model_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
   design_matrix <- model_matrix_method(expanded_formula, data)
@@ -410,19 +557,23 @@ xrf.formula <- function(object, data, family,
   xgb_control <- within(xgb_control, rm(nrounds))
 
   if (is.null(prefit_xgb)) {
-    m_xgb <- xgboost(data = design_matrix,
-                   label = data[[response_var]],
-                   nrounds = nrounds,
-                   objective = get_xgboost_objective(family),
-                   params = xgb_control,
-                   verbose = 0)
+    m_xgb <- xgboost(
+      data = design_matrix,
+      label = data[[response_var]],
+      nrounds = nrounds,
+      objective = get_xgboost_objective(family),
+      params = xgb_control,
+      verbose = 0
+    )
     rules <- extract_xgb_rules(m_xgb)
-  }
-  else {
+  } else {
     m_xgb <- prefit_xgb
     rules <- extract_xgb_rules(m_xgb)
     if (length(setdiff(rules$feature, colnames(design_matrix))) > 0) {
-      stop('prefit_xgb contains features (or factor-levels) not present in the input training data. This is currently not supported.')
+      cli::cli_abort(
+        "prefit_xgb contains features (or factor-levels) not present in the
+        input training data. This is currently not supported."
+      )
       # one simple approach would be to simply remove these feature splits from the rules
       # but that potentially dilutes the power of this method. for now, it's on the user to rectify this issue
     }
@@ -430,55 +581,73 @@ xrf.formula <- function(object, data, family,
 
   if (sparse) {
     feature_metadata <- build_feature_metadata(data)
-    rules <- correct_xgb_sparse_categoricals(rules, feature_metadata$feature_metadata, feature_metadata$xlev)
+    rules <- correct_xgb_sparse_categoricals(
+      rules,
+      feature_metadata$feature_metadata,
+      feature_metadata$xlev
+    )
   }
 
-  if (deoverlap){
-    rules <- xrf_deoverlap_rules(rules) %>%
-      select(.data$rule_id, .data$feature, .data$split, .data$less_than)
+  if (deoverlap) {
+    rules <- xrf_deoverlap_rules(rules) |>
+      select(rule_id, feature, split, less_than)
   }
 
-  rule_features <- if (sparse) evaluate_rules(rules, design_matrix) else evaluate_rules_dense_only(rules, design_matrix)
+  rule_features <- if (sparse) {
+    evaluate_rules(rules, design_matrix)
+  } else {
+    evaluate_rules_dense_only(rules, design_matrix)
+  }
 
   varying_rules <- remove_no_variance_rules(rule_features)
   rule_features <- rule_features[, varying_rules]
-  rules <- rules %>%
-    filter(.data$rule_id %in% varying_rules)
+  rules <- rules |>
+    filter(rule_id %in% varying_rules)
 
   non_duplicate_rules <- dedupe_train_rules(rule_features)
   rule_features <- rule_features[, non_duplicate_rules]
-  rules <- rules %>%
-    filter(.data$rule_id %in% non_duplicate_rules)
+  rules <- rules |>
+    filter(rule_id %in% non_duplicate_rules)
 
   overlapped_feature_names <- intersect(colnames(rule_features), colnames(data))
   if (length(overlapped_feature_names) > 0) {
-    warning(paste0('Found the following overlapped raw feature & rule names (the rule features will be dropped): ',
-                   paste(overlapped_feature_names, collapse = ',')))
-    rule_features <- rule_features[, !(colnames(rule_features) %in% overlapped_feature_names)]
+    cli::cli_warn(
+      "Found overlapped raw feature & rule names {overlapped_feature_names}
+      (the rule features will be dropped)."
+    )
+    rule_features <- rule_features[,
+      !(colnames(rule_features) %in% overlapped_feature_names)
+    ]
   }
 
   # todo we already have a design matrix, so re-generating it with glmnot is a bit wasteful
-  full_data <- cbind(data, rule_features,
-                     stringsAsFactors = FALSE)
+  full_data <- cbind(data, rule_features, stringsAsFactors = FALSE)
 
   # todo glmnet is a bottleneck on data size - it may be interesting to fit the glm to much larger data, e.g. with spark or biglasso
   full_formula <- add_predictors(expanded_formula, colnames(rule_features))
 
   # glmnet automatically adds an intercept
-  full_formula <- update(full_formula, . ~ . -1)
+  full_formula <- update(full_formula, . ~ . - 1)
 
-  m_glm <- glmnot(full_formula, full_data,
-                    family = family,
-                    alpha = 1, # this specifies the LASSO
-                    sparse = sparse,
-                    glm_control = glm_control)
+  m_glm <- glmnot(
+    full_formula,
+    full_data,
+    family = family,
+    alpha = 1, # this specifies the LASSO
+    sparse = sparse,
+    glm_control = glm_control
+  )
 
-  structure(list(glm = m_glm,
-                 xgb = m_xgb,
-                 base_formula = expanded_formula,
-                 rule_augmented_formula = full_formula,
-                 rules = rules),
-            class = 'xrf')
+  structure(
+    list(
+      glm = m_glm,
+      xgb = m_xgb,
+      base_formula = expanded_formula,
+      rule_augmented_formula = full_formula,
+      rules = rules
+    ),
+    class = 'xrf'
+  )
 }
 
 #' Generate the design matrix from an eXtreme RuleFit model
@@ -508,9 +677,12 @@ model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
   design_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
 
   raw_design_matrix <- design_matrix_method(trms, data)
-  rules_features <- if (sparse) evaluate_rules(object$rules, raw_design_matrix) else evaluate_rules_dense_only(object$rules, raw_design_matrix)
-  full_data <- cbind(data, rules_features,
-                     stringsAsFactors = FALSE)
+  rules_features <- if (sparse) {
+    evaluate_rules(object$rules, raw_design_matrix)
+  } else {
+    evaluate_rules_dense_only(object$rules, raw_design_matrix)
+  }
+  full_data <- cbind(data, rules_features, stringsAsFactors = FALSE)
 
   full_data
 }
@@ -531,27 +703,37 @@ model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
 #' predictions <- predict(m, iris)
 #'
 #' @export
-predict.xrf <- function(object, newdata,
-                        sparse = TRUE,
-                        lambda = 'lambda.min',
-                        type = 'response',
-                        ...) {
-  stopifnot(is.data.frame(newdata))
+predict.xrf <- function(
+  object,
+  newdata,
+  sparse = TRUE,
+  lambda = 'lambda.min',
+  type = 'response',
+  ...
+) {
+  if (!is.data.frame(newdata)) {
+    cli::cli_abort("{.arg newdata} should be a data frame.")
+  }
   full_data <- model.matrix(object, newdata, sparse)
 
-  predict(object$glm, newdata = full_data,
-          sparse = sparse, lambda = lambda, type = type)
+  predict(
+    object$glm,
+    newdata = full_data,
+    sparse = sparse,
+    lambda = lambda,
+    type = type
+  )
 }
 
 synthesize_conjunctions <- function(rules) {
-  rules %>%
-    group_by(.data$rule_id)%>%
-    arrange(.data$feature, .data$split) %>%
+  rules |>
+    group_by(rule_id) |>
+    arrange(feature, split) |>
     summarize(
-      conjunction =   paste0(
-        .data$feature,
-        ifelse(.data$less_than, '<', '>='),
-        format(.data$split, scientific = FALSE, digits = 4),
+      conjunction = paste0(
+        feature,
+        ifelse(less_than, '<', '>='),
+        format(split, scientific = FALSE, digits = 4),
         collapse = ' & '
       )
     )
@@ -574,16 +756,18 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
   rule_conjunctions <- synthesize_conjunctions(object$rules)
   glm_coefficients <- coef(object$glm, s = lambda)
   glm_df <- as.data.frame(as.matrix(glm_coefficients))
-  colnames(glm_df) <- sapply(lambda, function(lambda_value) { paste0('coefficient_', lambda) })
+  colnames(glm_df) <- sapply(lambda, function(lambda_value) {
+    paste0('coefficient_', lambda)
+  })
   glm_df$term <- rownames(glm_df)
   rownames(glm_df) <- NULL
-  glm_df %>%
-    left_join(rule_conjunctions, by = c('term' = 'rule_id')) %>%
-    arrange_at(colnames(glm_df[1])) %>%
+  glm_df |>
+    left_join(rule_conjunctions, by = c('term' = 'rule_id')) |>
+    arrange_at(colnames(glm_df[1])) |>
     mutate(
-      rule = .data$conjunction
-    ) %>%
-    select(-.data$conjunction)
+      rule = conjunction
+    ) |>
+    select(-conjunction)
 }
 
 #' Summarize an eXtreme RuleFit model
@@ -602,7 +786,11 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
 #'
 #' @export
 summary.xrf <- function(object, ...) {
-  cat(paste0('An eXtreme RuleFit model of ', n_distinct(object$rules$rule_id), ' rules.'))
+  cat(paste0(
+    'An eXtreme RuleFit model of ',
+    n_distinct(object$rules$rule_id),
+    ' rules.'
+  ))
   cat(paste0('\n\nOriginal Formula:\n\n'))
   cat(smaller_formula(object$base_formula))
   cat('\n\nTree model:\n\n')
@@ -624,7 +812,11 @@ summary.xrf <- function(object, ...) {
 #'
 #' @export
 print.xrf <- function(x, ...) {
-  cat(paste0('An eXtreme RuleFit model of ', n_distinct(x$rules$rule_id), ' rules.'))
+  cat(paste0(
+    'An eXtreme RuleFit model of ',
+    n_distinct(x$rules$rule_id),
+    ' rules.'
+  ))
   cat(paste0('\n\nOriginal Formula:\n\n'))
   cat(smaller_formula(x$base_formula), "\n")
 }
@@ -636,4 +828,3 @@ smaller_formula <- function(x, ...) {
   }
   chr_form
 }
-

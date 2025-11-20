@@ -1,7 +1,11 @@
-get_response <- function(formula) {
+get_response <- function(formula, call = rlang::caller_env()) {
   # this code may execute before xrf_preconditions, so the exception originates here
   if (length(formula) != 3) {
-    stop('Supplied formula does not appear to follow expected form of response ~ predictors')
+    cli::cli_abort(
+      "Supplied formula does not appear to follow expected form of
+      {.code response ~ predictors}",
+      call = call
+    )
   }
   all.vars(formula[[2]])
 }
@@ -14,18 +18,17 @@ expand_formula <- function(formula, data) {
   expanded_formula <- terms(formula, data = data)
   formula_terms <- attr(expanded_formula, 'term.labels')
   response <- all.vars(expanded_formula)[1]
-  as.formula(paste0(response, '~', 
-                    paste0(formula_terms, collapse = '+')))
+  as.formula(paste0(response, '~', paste0(formula_terms, collapse = '+')))
 }
 
 add_predictors <- function(base_formula, new_predictors) {
   if (length(new_predictors) == 0) {
-    return (base_formula)
+    return(base_formula)
   }
-  
+
   new_part <- paste(new_predictors, collapse = ' + ')
   base_formula_char <- Reduce(paste, deparse(base_formula))
-  
+
   as.formula(paste0(as.character(base_formula_char), ' + ', new_part))
 }
 
@@ -33,6 +36,36 @@ startsWith <- function(base, prefix) {
   substr(base, 1, nchar(prefix)) == prefix
 }
 
-lstrip <- function(full, to_remove){
+lstrip <- function(full, to_remove) {
   sub(sprintf("^%s", to_remove), "", full)
 }
+
+# declare false positive for global data
+utils::globalVariables(
+  c(
+    "Node",
+    "Tree",
+    "bound",
+    "conjunction",
+    "dimension",
+    "dimension.x",
+    "dimension.y",
+    "feature",
+    "feature_name",
+    "harvested_rules",
+    "less_than",
+    "level_remainder",
+    "lower_bound",
+    "max.right",
+    "may_be_rule_feature",
+    "original_volume_id",
+    "rule_id",
+    "space_id",
+    "upper_bound",
+    "volume_id",
+    "volume_id.left",
+    "volume_id.right",
+    "volume_id.x",
+    "volume_id.y"
+  )
+)
