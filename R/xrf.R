@@ -555,14 +555,15 @@ xrf.formula <- function(
   nrounds <- xgb_control$nrounds
   # necessary to remove from params to avoid false positive warnings
   xgb_control <- within(xgb_control, rm(nrounds))
+  browser()
 
   if (is.null(prefit_xgb)) {
     m_xgb <- xgboost(
-      data = design_matrix,
-      label = data[[response_var]],
+      x = design_matrix,
+      y = data[[response_var]],
       nrounds = nrounds,
       objective = get_xgboost_objective(family),
-      params = xgb_control,
+      params = xgb_params(xgb_control),
       verbose = 0
     )
     rules <- extract_xgb_rules(m_xgb)
@@ -827,4 +828,21 @@ smaller_formula <- function(x, ...) {
     chr_form <- paste0(chr_form[1], "[truncated]")
   }
   chr_form
+}
+
+xgb_params <- function(x, call = rlang::caller_env()) {
+  cl <- rlang::call2("xgb.params", .ns = "xgboost", !!!x)
+  res <- try(rlang::eval_tidy(cl, data = x), silent = TRUE)
+  if (inherits(res, "try-error")) {
+    msg <- as.character(res)
+    msg <- strsplit(msg, split = ":")[[1]][-(1:3)]
+    msg <- gsub("\\n", "", msg)
+    msg <- trimws(msg)
+    msg <- paste0(msg, collapse = "")
+    cli::cli_abort(
+      "There was an error when parsing the xgboost arguments: {msg}",
+      call = call
+    )
+  }
+  res
 }
