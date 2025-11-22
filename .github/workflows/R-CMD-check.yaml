@@ -58,7 +58,8 @@ jobs:
 
       - name: Install devel xgboost
         run: |
-          install.packages("xgboost", repos = c("https://dmlc.r-universe.dev"))
+          install.packages("xgboost", repos = "https://dmlc.r-universe.dev")
+        shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
         with:

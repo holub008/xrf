@@ -30,6 +30,7 @@ jobs:
       - name: Install devel xgboost
         run: |
           install.packages("xgboost", repos = c("https://dmlc.r-universe.dev"))
+        shell: Rscript {0}
 
       - name: Test coverage
         run: |
