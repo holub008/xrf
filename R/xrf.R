@@ -49,6 +49,7 @@ condition_xgb_control <- function(
     data_mutated[[response_var]] <- integer_response - min(integer_response)
   }
 
+  xgb_control$objective <- get_xgboost_objective(family, call = call)
   list(xgb_control = xgb_control, data = data_mutated)
 }
 
@@ -66,22 +67,6 @@ xrf_preconditions <- function(
     cli::cli_abort(
       "Family {.val {family}} is not currently supported. Supported families
       are: {.val {supported_families}}.",
-      call = call
-    )
-  }
-
-  if (!('nrounds' %in% names(xgb_control))) {
-    cli::cli_abort(
-      "Must supply an {.arg nrounds} list element to the {.arg xgb_control}
-      argument.",
-      call = call
-    )
-  }
-
-  if ('objective' %in% names(xgb_control)) {
-    cli::cli_abort(
-      "User may not supply an {.arg objective} element to the {.arg xgb_control}
-      argument.",
       call = call
     )
   }
@@ -507,6 +492,14 @@ xrf <- function(object, ...) {
 #' @importFrom stats terms
 #' @importFrom stats update
 #'
+#' @details
+#'
+#' In November 2025, the new version of \pkg{xgboost} (3.1.2.1) introduced
+#' significant breaking changes. This version of \pkg{xrf} can reproduce
+#' predictions from older versions of \pkg{xgboost}. However, there are likely
+#' to be differences in \pkg{xrf} model fits between old and new versions of
+#' \pkg{xgboost}.
+#'
 #' @references
 #' Friedman, J. H., & Popescu, B. E. (2008). Predictive learning via rule
 #' ensembles. \emph{The Annals of Applied Statistics, 2}(3), 916-954.
@@ -557,12 +550,10 @@ xrf.formula <- function(
   xgb_control <- within(xgb_control, rm(nrounds))
 
   if (is.null(prefit_xgb)) {
-    m_xgb <- xgboost(
-      data = design_matrix,
-      label = data[[response_var]],
+    m_xgb <- xgboost::xgb.train(
+      xgboost::xgb.DMatrix(design_matrix, label = data[[response_var]]),
       nrounds = nrounds,
-      objective = get_xgboost_objective(family),
-      params = xgb_control,
+      params = xgb_params(xgb_control),
       verbose = 0
     )
     rules <- extract_xgb_rules(m_xgb)
@@ -793,10 +784,13 @@ summary.xrf <- function(object, ...) {
   ))
   cat(paste0('\n\nOriginal Formula:\n\n'))
   cat(smaller_formula(object$base_formula))
-  cat('\n\nTree model:\n\n')
-  show(summary(object$xgb))
-  cat('\n\nGLM:\n\n')
-  show(summary(object$glm))
+  cli::cli_rule("Tree model")
+  cat("\n")
+  print(object$xgb)
+  cat("\n")
+  cli::cli_rule("GLM")
+  print(object$glm$model)
+  invisible(object)
 }
 
 #' Print an eXtreme RuleFit model
@@ -827,4 +821,21 @@ smaller_formula <- function(x, ...) {
     chr_form <- paste0(chr_form[1], "[truncated]")
   }
   chr_form
+}
+
+xgb_params <- function(x, call = rlang::caller_env()) {
+  cl <- rlang::call2("xgb.params", .ns = "xgboost", !!!x)
+  res <- try(rlang::eval_tidy(cl, data = x), silent = TRUE)
+  if (inherits(res, "try-error")) {
+    msg <- as.character(res)
+    msg <- strsplit(msg, split = ":")[[1]][-(1:3)]
+    msg <- gsub("\\n", "", msg)
+    msg <- trimws(msg)
+    msg <- paste0(msg, collapse = "")
+    cli::cli_abort(
+      "There was an error when parsing the xgboost arguments: {msg}",
+      call = call
+    )
+  }
+  res
 }
