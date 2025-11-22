@@ -41,6 +41,13 @@ This method uses XGBoost to fit a tree ensemble, extracts a ruleset as the conju
 traversals, and fits a sparse linear model to the resulting feature set
 (including the original feature set) using glmnet.
 }
+\details{
+In November 2025, the new version of \pkg{xgboost} (3.1.2.1) introduced
+significant breaking changes. This version of \pkg{xrf} can reproduce
+predictions from older versions of \pkg{xgboost}. However, there are likely
+to be differences in \pkg{xrf} model fits between old and new versions of
+\pkg{xgboost}.
+}
 \examples{
 m <- xrf(Petal.Length ~ ., iris,
          xgb_control = list(nrounds = 2, max_depth = 2),

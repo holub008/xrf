@@ -492,6 +492,14 @@ xrf <- function(object, ...) {
 #' @importFrom stats terms
 #' @importFrom stats update
 #'
+#' @details
+#'
+#' In November 2025, the new version of \pkg{xgboost} (3.1.2.1) introduced
+#' significant breaking changes. This version of \pkg{xrf} can reproduce
+#' predictions from older versions of \pkg{xgboost}. However, there are likely
+#' to be differences in \pkg{xrf} model fits between old and new versions of
+#' \pkg{xgboost}.
+#'
 #' @references
 #' Friedman, J. H., & Popescu, B. E. (2008). Predictive learning via rule
 #' ensembles. \emph{The Annals of Applied Statistics, 2}(3), 916-954.
@@ -776,10 +784,13 @@ summary.xrf <- function(object, ...) {
   ))
   cat(paste0('\n\nOriginal Formula:\n\n'))
   cat(smaller_formula(object$base_formula))
-  cat('\n\nTree model:\n\n')
-  show(summary(object$xgb))
-  cat('\n\nGLM:\n\n')
-  show(summary(object$glm))
+  cli::cli_rule("Tree model")
+  cat("\n")
+  print(object$xgb)
+  cat("\n")
+  cli::cli_rule("GLM")
+  print(object$glm$model)
+  invisible(object)
 }
 
 #' Print an eXtreme RuleFit model
