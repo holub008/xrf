@@ -49,6 +49,7 @@ condition_xgb_control <- function(
     data_mutated[[response_var]] <- integer_response - min(integer_response)
   }
 
+  xgb_control$objective <- get_xgboost_objective(family, call = call)
   list(xgb_control = xgb_control, data = data_mutated)
 }
 
@@ -66,22 +67,6 @@ xrf_preconditions <- function(
     cli::cli_abort(
       "Family {.val {family}} is not currently supported. Supported families
       are: {.val {supported_families}}.",
-      call = call
-    )
-  }
-
-  if (!('nrounds' %in% names(xgb_control))) {
-    cli::cli_abort(
-      "Must supply an {.arg nrounds} list element to the {.arg xgb_control}
-      argument.",
-      call = call
-    )
-  }
-
-  if ('objective' %in% names(xgb_control)) {
-    cli::cli_abort(
-      "User may not supply an {.arg objective} element to the {.arg xgb_control}
-      argument.",
       call = call
     )
   }
@@ -555,14 +540,11 @@ xrf.formula <- function(
   nrounds <- xgb_control$nrounds
   # necessary to remove from params to avoid false positive warnings
   xgb_control <- within(xgb_control, rm(nrounds))
-  browser()
 
   if (is.null(prefit_xgb)) {
-    m_xgb <- xgboost(
-      x = design_matrix,
-      y = data[[response_var]],
+    m_xgb <- xgboost::xgb.train(
+      xgboost::xgb.DMatrix(design_matrix, label = data[[response_var]]),
       nrounds = nrounds,
-      objective = get_xgboost_objective(family),
       params = xgb_params(xgb_control),
       verbose = 0
     )
