@@ -27,6 +27,10 @@ jobs:
           extra-packages: any::covr, any::xml2
           needs: coverage
 
+      - name: Install devel xgboost
+        run: |
+          install.packages("xgboost", repos = c("https://dmlc.r-universe.dev"))
+
       - name: Test coverage
         run: |
           cov <- covr::package_coverage(
