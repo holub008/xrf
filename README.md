@@ -39,14 +39,12 @@ The general algorithm follows:
     * For a description of this algorithm, see [this document](https://github.com/holub008/snippets/blob/master/overlapped_hyperrectangles/overlapped_hyperrectangles.pdf)
 
 ### Comparison to alternatives
-Several implementations of RuleFit are available for R: [pre](https://CRAN.R-project.org/package=pre), [horserule](https://CRAN.R-project.org/package=horserule), and [rulefit](https://github.com/gravesee/rulefit). xrf improves on some aspects of these by:
+Several implementations of RuleFit are available for R: [pre](https://CRAN.R-project.org/package=pre), (once upon a time) [horserule](https://CRAN.R-project.org/package=horserule), and [rulefit](https://github.com/gravesee/rulefit). xrf improves on some aspects of these by:
 * Usually building more accurate models at fixed number of parameters
 * Usually building models faster
 * Building models that predict for new factor-levels
 * Providing a more concise and limited interface
 * Tested & actively maintained for fewer bugs
-
-On the last point, as of April 2019, the 'pre' and 'rulefit' packages fail to build a model on the census income example below due to bugs.
 
 ## Example
 
@@ -232,4 +230,3 @@ How slick is that! We have:
 Effects are immediately available by doing a lookup in the exclusive rules. This is a great win for interpretability.
 
 As mentioned above, this example is contrived in that it uses `depth=1` trees (i.e. conjunctions of size 1). As depth increases, interpretability can suffer regardless de-overlapping if the final ruleset is non-sparse. However, for certain problems, particularly small depth or sparse effects, de-overlapping can be a boon for interpretability.
-

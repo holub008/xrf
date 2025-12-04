@@ -21,14 +21,15 @@ Ideally, changes are made according to the following process:
 * Ensure that xrf tests succeed (run via `devtools::test()`)
 * Submit a pull request (this can be done via github UI)
     * Maintainers will provide a code review. Every substantive comment must be addressed before the PR is accepted.
-        * Any follow-on commits to the fork will be reflected in the PR
 * Please bump version numbers (`major.minor.patch`) in `DESCRIPTION` according to the final change made
     * major number for any substantial API or backwards incompatible changes
-    * minor number for any standard change not touching API or compatiility
+    * minor number for any standard change not touching API or compatibility
     * patch number for any bug fixes
 
-### Code style suggestions
-No strict style at current, but please attempt to follow suit with the rest of the project. If in doubt, defer to [Wickham](http://r-pkgs.had.co.nz/r.html#style).
+### Code style
+
+We are informally using the tidy code style the [air](https://posit-dev.github.io/air/formatter.html) formatter.
+Please [install](https://posit-dev.github.io/air/cli.html) `air` and run with `air format .` after making changes.
 
 ### Help with R package development
 If you're new to R package development but want to develop on xrf, both of the following are great resources:

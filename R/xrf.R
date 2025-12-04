@@ -36,7 +36,8 @@ condition_xgb_control <- function(
   # xgboost expects multinomial labels to be 0:num_class
   if (
     family == 'multinomial' &&
-      (is.factor(data[[response_var]]) || is.character(data[[response_var]]))
+      (is.factor(data[[response_var]]) ||
+        is.character(data[[response_var]]))
   ) {
     integer_response <- as.integer(as.factor(data[[response_var]]))
     data_mutated[[response_var]] <- integer_response - min(integer_response)
@@ -158,30 +159,31 @@ get_xgboost_objective <- function(family, call = rlang::caller_env()) {
 #############################################
 
 augment_rules <- function(row, rule_ids, less_than) {
-  bind_rows(
-    lapply(rule_ids, function(rule_id) {
-      list(
-        split_id = row$ID,
-        rule_id = rule_id,
-        feature = row$Feature,
-        split = row$Split,
-        less_than = less_than
-      )
-    })
-  )
+  bind_rows(lapply(rule_ids, function(rule_id) {
+    list(
+      split_id = row$ID,
+      rule_id = rule_id,
+      feature = row$Feature,
+      split = row$Split,
+      less_than = less_than
+    )
+  }))
 }
 
 # this is of course slow, but it shouldn't be a bottleneck due to ensembles generally small and tree depth < 6
 rule_traverse <- function(row, tree) {
   if (row$Feature == 'Leaf') {
-    return(data.frame(
-      split_id = row$ID,
-      rule_id = paste0('r', gsub('-', '_', row$ID)), # leaf nodes uniquely identify a rule
-      feature = NA,
-      split = NA,
-      less_than = NA,
-      stringsAsFactors = FALSE
-    ))
+    return(
+      data.frame(
+        split_id = row$ID,
+        rule_id = paste0('r', gsub('-', '_', row$ID)),
+        # leaf nodes uniquely identify a rule
+        feature = NA,
+        split = NA,
+        less_than = NA,
+        stringsAsFactors = FALSE
+      )
+    )
   } else {
     # the Yes/No obfuscates the simplicity of the algo - in order tree traversal
     left_child <- tree[tree$ID == row$Yes, ]
@@ -204,13 +206,15 @@ rule_traverse <- function(row, tree) {
       less_than = FALSE
     )
 
-    return(rbind(
-      left_rules_augmented,
-      right_rules_augmented,
-      left_rules,
-      right_rules,
-      stringsAsFactors = FALSE
-    ))
+    return(
+      rbind(
+        left_rules_augmented,
+        right_rules_augmented,
+        left_rules,
+        right_rules,
+        stringsAsFactors = FALSE
+      )
+    )
   }
 }
 
@@ -263,13 +267,14 @@ build_feature_metadata <- function(data) {
       !is.numeric(x)
     }) |>
     lapply(function(x) {
-      if (is.factor(x)) levels(x) else as.character(unique(x))
+      if (is.factor(x)) {
+        levels(x)
+      } else {
+        as.character(unique(x))
+      }
     })
 
-  list(
-    xlev = xlev,
-    feature_metadata = feature_metadata
-  )
+  list(xlev = xlev, feature_metadata = feature_metadata)
 }
 
 has_matching_level <- function(feature_name, level_remainder, xlev) {
@@ -542,7 +547,11 @@ xrf.formula <- function(
     prefit_xgb
   )
 
-  model_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
+  model_matrix_method <- if (sparse) {
+    sparse.model.matrix
+  } else {
+    model.matrix
+  }
   design_matrix <- model_matrix_method(expanded_formula, data)
 
   nrounds <- xgb_control$nrounds
@@ -624,7 +633,8 @@ xrf.formula <- function(
     full_formula,
     full_data,
     family = family,
-    alpha = 1, # this specifies the LASSO
+    alpha = 1,
+    # this specifies the LASSO
     sparse = sparse,
     glm_control = glm_control
   )
@@ -665,7 +675,11 @@ model.matrix.xrf <- function(object, data, sparse = TRUE, ...) {
   trms <- terms(object$base_formula)
   trms <- delete.response(trms)
 
-  design_matrix_method <- if (sparse) sparse.model.matrix else model.matrix
+  design_matrix_method <- if (sparse) {
+    sparse.model.matrix
+  } else {
+    model.matrix
+  }
 
   raw_design_matrix <- design_matrix_method(trms, data)
   rules_features <- if (sparse) {
@@ -755,9 +769,7 @@ coef.xrf <- function(object, lambda = 'lambda.min', ...) {
   glm_df |>
     left_join(rule_conjunctions, by = c('term' = 'rule_id')) |>
     arrange_at(colnames(glm_df[1])) |>
-    mutate(
-      rule = conjunction
-    ) |>
+    mutate(rule = conjunction) |>
     select(-conjunction)
 }
 
