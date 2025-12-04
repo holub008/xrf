@@ -28,7 +28,7 @@ Ideally, changes are made according to the following process:
 
 ### Code style
 
-We are informally using the tidy code style the [air](https://posit-dev.github.io/air/formatter.html) formatter.
+We are informally using tidy code style via the [air](https://posit-dev.github.io/air/formatter.html) formatter.
 Please [install](https://posit-dev.github.io/air/cli.html) `air` and run with `air format .` after making changes.
 
 ### Help with R package development
