@@ -18,7 +18,7 @@ devtools::install_dev('xrf')
 ```
 
 ## About
-RuleFit (described in [Friedman & Popescu](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf)) is a clever model combining tree ensembles and linear models. The goal is to produce a model with comparable performance to a tree ensemble, with the interpretability of a linear model.
+RuleFit (described in [Friedman & Popescu](https://doi.org/10.1214/07-AOAS148)) is a clever model combining tree ensembles and linear models. The goal is to produce a model with comparable performance to a tree ensemble, with the interpretability of a linear model.
 
 The general algorithm follows:
 
