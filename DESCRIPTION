@@ -26,7 +26,7 @@ Imports:
     Matrix,
     methods,
     rlang,
-    xgboost
+    xgboost (>= 3.1.2.1)
 Suggests: 
     covr,
     testthat (>= 3.0.0)
