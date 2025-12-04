@@ -17,7 +17,7 @@ License: MIT + file LICENSE
 URL: https://github.com/holub008/xrf
 BugReports: https://github.com/holub008/xrf/issues
 Depends: 
-    R (>= 4.1.0)
+    R (>= 4.3.0)
 Imports: 
     cli,
     dplyr,
@@ -26,7 +26,7 @@ Imports:
     Matrix,
     methods,
     rlang,
-    xgboost (>= 0.71.2)
+    xgboost (>= 3.1.2.1)
 Suggests: 
     covr,
     testthat (>= 3.0.0)
