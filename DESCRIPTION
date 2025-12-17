@@ -1,6 +1,6 @@
 Package: xrf
 Title: eXtreme RuleFit
-Version: 0.3.0
+Version: 0.3.1
 Authors@R: 
     person("Karl", "Holub", , "karljholub@gmail.com", role = c("aut", "cre"))
 Description: An implementation of the RuleFit algorithm as described in
