@@ -1,4 +1,4 @@
-test_that('single dimnension overlapped rules are deoverlapped', {
+test_that('single dimension overlapped rules are deoverlapped', {
   rules <- data.frame(
     rule_id = c('1', '1', '2', '2', '3', '4', '5'),
     feature = c('x', 'x', 'x', 'x', 'x', 'x', 'x'),

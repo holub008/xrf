@@ -187,19 +187,15 @@ generate_volumes_from_partitioned_space <- function(
   return(expanded_volumes)
 }
 
-#' @import fuzzyjoin
+#' @import dplyr
 prune_noncovering_volumes <- function(new_volumes, original_volumes) {
   # we left join because not all new volumes belong to all old volumes
   # the range join prescribes that the original volumes contains the new volume
-  original_to_new_volumes <- fuzzy_left_join(
+  original_to_new_volumes <- left_join(
     original_volumes,
     new_volumes,
-    by = c('min' = 'min', 'max' = 'max', 'dimension' = 'dimension'),
-    match_fun = c(`<=`, `>=`, `==`)
-  ) |>
-    # renaming some things in a reasonable way
-    mutate(dimension = dimension.x) |>
-    select(-dimension.x, -dimension.y)
+    by = join_by(dimension == dimension, min <= min, max >= max)
+  )
 
   covering_volumes <- data.frame()
   for (new_volume_id_to_check in unique(new_volumes$volume_id)) {
@@ -267,15 +263,14 @@ fuse_abutted_hyperrectangles <- function(volumes, original_volumes) {
         max
       )
 
-    # note this is a one to many maping, since the originals are overlapped
+    # note this is a one to many mapping, since the originals are overlapped
     current_volumes_to_original <- fused_volumes |>
-      fuzzy_inner_join(
+      inner_join(
         original_volumes,
-        by = c('min' = 'min', 'max' = 'max', 'dimension' = 'dimension'),
-        match_fun = c(`>=`, `<=`, `==`)
+        join_by(dimension == dimension, min >= min, max <= max)
       ) |>
       group_by(volume_id.x, volume_id.y) |>
-      filter(n_distinct(dimension.x) == dimensionality) |>
+      filter(n_distinct(dimension) == dimensionality) |>
       summarize(
         volume_id = volume_id.x[1],
         original_volume_id = volume_id.y[1]

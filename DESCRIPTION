@@ -21,7 +21,6 @@ Depends:
 Imports: 
     cli,
     dplyr,
-    fuzzyjoin,
     glmnet (>= 3.0),
     Matrix,
     methods,
